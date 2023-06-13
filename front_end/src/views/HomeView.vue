@@ -57,24 +57,35 @@
       <div class="user-info">
         <div class="avatar">
           <AvatarModule 
-          :user-id="userInfoStore?userInfoStore.userId:''"
-          :size="70" />
+            :user-id="userInfoStore?userInfoStore.userId:''"
+            :size="70"
+          />
         </div>
         <div class="info">
-            <p>Hi! 你好</p>
-            <div class="login">
-                <div>登录</div>
-                <div>注册</div>
-                <div>开店</div>
+          <p>Hi! 你好</p>
+          <div class="login">
+            <div @click="goAccount('login')">
+              登录
             </div>
-            <div class="func">
-                <div><el-icon><ShoppingCart /></el-icon>
-                <span>购物车</span></div>
-                <div><el-icon><Goods /></el-icon>
-                <span>买过的店</span></div>
-                <div></div>
-                <div></div>
+            <div @click="goAccount('register')">
+              注册
             </div>
+            <div @click="goAccount('newShop')">
+              开店
+            </div>
+          </div>
+          <div class="func">
+            <div>
+              <el-icon><ShoppingCart /></el-icon>
+              <span>购物车</span>
+            </div>
+            <div>
+              <el-icon><Goods /></el-icon>
+              <span>买过的店</span>
+            </div>
+            <div />
+            <div />
+          </div>
         </div>
       </div>
     </nav>
@@ -82,11 +93,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref} from 'vue'
 import AvatarModule from '@/components/AvatarModule.vue'
 import { useUserInfoStore } from '@/stores/userInfo.js'
+import { useRouter } from 'vue-router';
 const userInfoStore = useUserInfoStore()
 const searchRef = ref()
+const router = useRouter()
 const searchLogs = ref([
     "vue",
     "react",
@@ -96,6 +109,7 @@ const searchLogs = ref([
     "rollup",
     "babel",
 ])
+
 const searchOnFocus = ref(false)
 const showRecord = (flag) => {
     searchOnFocus.value = flag
@@ -109,16 +123,20 @@ const goSearch = ( keyword) => {
 }
 
 const closeRecord = (event) => {
-    if (searchRef.value.contains(event.target)) return
+    if (searchRef.value && searchRef.value.contains(event.target)) return
     else searchOnFocus.value = false
+}
+const goAccount = (type) => {
+    router.push('/account/' + type)
 }
 </script>
 
 <style lang="scss" scoped>
 $bg-gray: #ddd;
 main {
-	height: 100vh;
+	// height: 100vh;
 	width: var(--global-width);
+    margin: 0 auto;
 
 	// background-color: pink;
 	header {
@@ -198,7 +216,7 @@ main {
 
 				.record {
 					padding: 10px;
-                    width: 100%;
+          width: 100%;
 					p {
 						font-size: 16px;
 					}
@@ -316,7 +334,7 @@ main {
                         font-size: 20px;
                         color: white;
                         background-color: pink;
-                        padding: 6px 14px;
+                        padding: 6px 18px;
                         border-radius: 20px;
                         cursor: pointer;
                         &:hover{

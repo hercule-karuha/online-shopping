@@ -1,15 +1,21 @@
 <template>
-  <RouterView />
+  <router-view v-slot="{Component}">
+    <transition enter-active-class="animate__animated animate__fadeIn animate__faster">
+        <component :is="Component" />
+    </transition>
+  </router-view>
   <nav>
     <div title="用户中心"><el-icon><User /></el-icon></div>
     <div title="搜索"><el-icon><Search /></el-icon></div>
-    <div title="返回上一级"><el-icon><ArrowLeft /></el-icon></div>
-    <div title="主页"><el-icon><House /></el-icon></div>
+    <div title="返回上一级" @click="router.go(-1)"><el-icon><ArrowLeft /></el-icon></div>
+    <div title="主页" @click="router.push('/')"><el-icon><House /></el-icon></div>
     <div title="购物车"><el-icon><ShoppingCart /></el-icon></div>
   </nav>
 </template>
 <script setup>
 import { RouterView } from 'vue-router'
+import { useRouter } from 'vue-router'
+const router = useRouter()
 </script>
 <style lang="scss" scoped>
 nav{
