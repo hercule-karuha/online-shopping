@@ -1,6 +1,6 @@
 create table users
 (
-    user_id   varchar(20) not null
+    user_id  integer not null
         primary key,
     account   char(11)    not null
         unique
@@ -42,7 +42,7 @@ create index idx_users_account_password
 
 create table stores
 (
-    store_id varchar(20)  not null
+    store_id integer  not null
         primary key,
     name     varchar(100) not null
 );
@@ -55,11 +55,12 @@ comment on column stores.name is '商铺名称';
 
 create table stores_products_unit
 (
-    store_id   varchar(20) not null
+    store_id  integer not null
         constraint fk_stores_products_unit_store_id
             references stores,
-    product_id varchar(20) not null
-        unique
+    product_id integer not null
+        unique,
+        primary key (store_id,product_id)
 );
 
 comment on table stores_products_unit is '商铺_商品联合表，用于表示商店中有哪些商品';
@@ -70,7 +71,7 @@ comment on column stores_products_unit.product_id is '商铺里面有的商品id
 
 create table product_images
 (
-    image_id varchar(20)  not null,
+    image_id integer  not null,
     path     varchar(200) not null,
     constraint product_images_pk
         primary key (image_id, path)
@@ -87,13 +88,13 @@ create index idx_product_images_image_id
 
 create table products
 (
-    product_id  varchar(20)    not null
+    product_id  integer   not null
         primary key
         constraint fk_products_product_id
             references stores_products_unit (product_id),
     name        varchar(100)   not null,
     description text,
-    image_id    varchar(20),
+    image_id   integer,
     price       numeric(10, 2) not null
         constraint products_price_check
             check (price >= (0)::numeric),
@@ -133,11 +134,11 @@ create index idx_products_stock
 
 create table orders
 (
-    order_id      varchar(20)             not null
+    order_id      integer             not null
         primary key,
-    user_id       varchar(20)             not null
+    user_id       integer             not null
         references users,
-    product_id    varchar(20)             not null
+    product_id    integer             not null
         references products,
     purchase_time timestamp default now() not null,
     total_price   numeric(10, 2)          not null
@@ -168,9 +169,9 @@ create index idx_orders_user_id_product_id
 
 create table shopping_cart
 (
-    user_id  varchar(20) not null
+    user_id  integer not null
         references users,
-    order_id varchar(20) not null
+    order_id integer not null
         references orders,
     primary key (user_id, order_id)
 );
