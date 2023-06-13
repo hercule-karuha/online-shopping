@@ -1,12 +1,14 @@
-RESET statement_timeout;
-RESET lock_timeout;
-RESET idle_in_transaction_session_timeout;
-RESET client_encoding;
-RESET standard_conforming_strings;
-SELECT pg_catalog.set_config('search_path', 'public', true);
-RESET check_function_bodies;
-RESET xmloption;
-RESET client_min_messages;
-RESET row_security;
+drop table public.product_images;
 
-DROP SCHEMA public CASCADE;
+drop table public.shopping_cart;
+
+drop table public.orders;
+
+drop table public.users;
+
+drop table public.products;
+
+drop table public.stores_products_unit;
+
+drop table public.stores;
+
