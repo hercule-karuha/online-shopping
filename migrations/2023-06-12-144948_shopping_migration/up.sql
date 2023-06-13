@@ -69,6 +69,7 @@ comment on column product_images.image_id is '商品图片ID';
 
 comment on column product_images.path is '商品图片相对路径';
 
+
 create index idx_product_images_image_id
     on product_images (image_id);
 
@@ -106,6 +107,8 @@ comment on column products.sales is '销量';
 
 comment on column products.stock is '库存量';
 
+alter table products
+    owner to postgres;
 
 create index idx_products_price
     on products (price);
@@ -120,10 +123,7 @@ create table orders
 (
     order_id      serial
         primary key,
-    user_id       integer                 not null
-        references users,
-    product_id    integer                 not null
-        references products,
+    store_product_id INTEGER not null,
     purchase_time timestamp default now() not null,
     total_price   numeric(10, 2)          not null
         constraint orders_total_price_check
@@ -137,9 +137,7 @@ comment on table orders is '订单表';
 
 comment on column orders.order_id is '订单id';
 
-comment on column orders.user_id is '买家即用户id';
-
-comment on column orders.product_id is '商品';
+comment on column orders.store_product_id is '商店中商品id';
 
 comment on column orders.purchase_time is '购买时间，默认当前时间';
 
@@ -147,9 +145,8 @@ comment on column orders.total_price is '应付金额';
 
 comment on column orders.quantity is '购买数量';
 
-
-create index idx_orders_user_id_product_id
-    on orders (user_id, product_id);
+create index idx_orders_store_product_id
+    on orders (store_product_id);
 
 create table shopping_cart
 (
@@ -162,14 +159,14 @@ create table shopping_cart
 
 create table stores_products_unit
 (
+    store_product_id serial primary key,
     store_id   integer not null
         constraint fk_stores_products_unit_store_id
             references stores,
     product_id integer not null
         unique
         constraint fk_stores_products_unit_product_id
-            references products,
-    primary key (store_id, product_id)
+            references products
 );
 
 comment on table stores_products_unit is '商铺_商品联合表，用于表示商店中有哪些商品';
@@ -177,4 +174,26 @@ comment on table stores_products_unit is '商铺_商品联合表，用于表示�
 comment on column stores_products_unit.store_id is '商铺id';
 
 comment on column stores_products_unit.product_id is '商铺里面有的商品id';
+
+create table user_stores_unit (
+    user_stores_id serial not null
+        primary key,
+    user_id INTEGER NOT NULL
+        REFERENCES users,
+    store_id INTEGER NOT NULL
+        REFERENCES stores
+);
+
+CREATE  INDEX idx_user_stores_unit ON user_stores_unit(user_id,store_id);
+
+comment on table user_stores_unit is '用户商铺联合表';
+
+comment on  column user_stores_unit.user_stores_id is '用户商铺ID';
+
+comment on column user_stores_unit.user_id is '用户id';
+
+comment on column user_stores_unit.store_id is '商铺ID';
+
+
+
 
