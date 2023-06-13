@@ -37,9 +37,6 @@ comment on column users.phone is '用户电话:11位纯数字';
 
 comment on column users.address is '用户/商家地址';
 
-alter table users
-    owner to postgres;
-
 create index idx_users_account_password
     on users (account, password);
 
@@ -56,9 +53,6 @@ comment on column stores.store_id is '商铺id';
 
 comment on column stores.name is '商铺名称';
 
-alter table stores
-    owner to postgres;
-
 create table stores_products_unit
 (
     store_id   varchar(20) not null
@@ -74,9 +68,6 @@ comment on column stores_products_unit.store_id is '商铺id';
 
 comment on column stores_products_unit.product_id is '商铺里面有的商品id';
 
-alter table stores_products_unit
-    owner to postgres;
-
 create table product_images
 (
     image_id varchar(20)  not null,
@@ -90,9 +81,6 @@ comment on table product_images is '商品图片表，包含各个商品的图�
 comment on column product_images.image_id is '商品图片ID';
 
 comment on column product_images.path is '商品图片相对路径';
-
-alter table product_images
-    owner to postgres;
 
 create index idx_product_images_image_id
     on product_images (image_id);
@@ -133,8 +121,6 @@ comment on column products.sales is '销量';
 
 comment on column products.stock is '库存量';
 
-alter table products
-    owner to postgres;
 
 create index idx_products_price
     on products (price);
@@ -176,8 +162,6 @@ comment on column orders.total_price is '应付金额';
 
 comment on column orders.quantity is '购买数量';
 
-alter table orders
-    owner to postgres;
 
 create index idx_orders_user_id_product_id
     on orders (user_id, product_id);
@@ -191,6 +175,4 @@ create table shopping_cart
     primary key (user_id, order_id)
 );
 
-alter table shopping_cart
-    owner to postgres;
 
