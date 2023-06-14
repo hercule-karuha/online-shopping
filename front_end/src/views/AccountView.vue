@@ -24,13 +24,13 @@
           class="password"
         >
           <input
+            v-model="formData.confirmPassword"
             type="password"
             placeholder="确认密码"
-            v-model="formData.confirmPassword"
           >
         </div>
         <el-radio-group
-            v-if="accountType==='register'"
+          v-if="accountType==='register'"
           v-model="formData.sex"
           class="radio-group"
         >
@@ -55,7 +55,7 @@
         <p>欢迎来到<span>XX商城</span></p>
         <div class="img">
           <img
-            src="https://pic.imgdb.cn/item/6488985b1ddac507cc1f59cd.jpg"
+            src="https://pic.imgdb.cn/item/6488985b1ddac507cc1f59cd.jpg?w=300"
             alt=""
           >
         </div>

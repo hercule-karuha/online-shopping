@@ -16,10 +16,10 @@
     </div>
     <div class="page">
       <el-pagination
-        :page-size="list.pageSize"
-        :pager-count="list.pageCount"
+        :page-size="dataSource.pageSize"
+        :page-count="dataSource.pageCount"
         layout="prev, pager, next"
-        :total="list.total"
+        :total="dataSource.total"
         @update:current-page="pageNoChange"
       />
     </div>
@@ -61,5 +61,12 @@ const pageNoChange = (pageNo) => {
 </script>
 
 <style scoped lang="scss">
-
+.content{
+    display: flex;
+}
+.page{
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+}
 </style>

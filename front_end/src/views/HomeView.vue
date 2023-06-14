@@ -83,14 +83,31 @@
               <el-icon><Goods /></el-icon>
               <span>买过的店</span>
             </div>
-            <div />
-            <div />
+            <div>
+              <el-icon><Clock /></el-icon>
+              <span>购买记录</span>
+            </div>
+            <div>
+              <el-icon><TakeawayBox /></el-icon>
+              <span>我的店铺</span>
+            </div>
           </div>
         </div>
       </div>
     </nav>
-    <div class="recommend">
-
+    <div class="homepage-list">
+      <span>猜你喜欢</span>
+      <DataList
+        :data-source="dataSource"
+        @page-no-change="pageNoChange"
+      >
+        <template #default="{data}">
+          <CommodityItem
+            :data="data"
+            @click="router.push('/commodity/'+data.productId)"
+          />
+        </template>
+      </DataList>
     </div>
   </main>
 </template>
@@ -100,6 +117,8 @@ import { ref} from 'vue'
 import AvatarModule from '@/components/AvatarModule.vue'
 import { useUserInfoStore } from '@/stores/userInfo.js'
 import { useRouter } from 'vue-router';
+import DataList from '@/components/DataList.vue'
+import CommodityItem from '@/components/CommodityItem.vue'
 const userInfoStore = useUserInfoStore()
 const searchRef = ref()
 const router = useRouter()
@@ -112,7 +131,34 @@ const searchLogs = ref([
     "rollup",
     "babel",
 ])
-
+const dataSource = {
+    pageSize: 20,
+    pageCount: 3,
+    total: 60,
+    list: [
+        {
+            productId: 1,
+            cover: 'https://pic.imgdb.cn/item/64475b180d2dde5777857756.webp',
+            name: 'XXxxxxxxxxxxxxXXXXXXXXXXX',
+            descriton:'xxxxxxxxxxxxxxxxxxxxx xwewxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+            price: 100
+        },
+        {
+            productId: 1,
+            cover: 'https://pic.imgdb.cn/item/64475b180d2dde5777857756.webp',
+            name: 'XXxxxxxxxxxxxxXXXXXXXXXXX',
+            descriton:'xxxxxxxxxxxxxxxxxxxxx xwewxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+            price: 100
+        },
+        {
+            productId: 1,
+            cover: 'https://pic.imgdb.cn/item/63b00e822bbf0e799465cd93.jpg',
+            name: 'XXxxxxxxxxxxxxXXXXXXXXXXX',
+            descriton:'xxxxxxxxxxxxxxxxxxxxx xwewxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+            price: 100
+        }
+    ]
+}
 const searchOnFocus = ref(false)
 const showRecord = (flag) => {
     searchOnFocus.value = flag
@@ -132,6 +178,10 @@ const closeRecord = (event) => {
 const goAccount = (type) => {
     router.push('/account/' + type)
 }
+
+const pageNoChange = (pageNo) => {
+    console.log(pageNo)
+}
 </script>
 
 <style lang="scss" scoped>
@@ -148,7 +198,7 @@ main {
 		width: 100%;
 		display: flex;
 		justify-content: space-between;
-		margin-top: 20px;
+        padding-top: 20px;
 
 		.logo {
 			height: 100px;
@@ -347,7 +397,39 @@ main {
                         }
                     }
                 }
+                .func{
+                    margin-top: 38px;
+                    display: flex;
+                    justify-content: space-around;
+                    align-items: center;
+                    div{
+                        font-size: 18px;
+                        display: flex;
+                        align-items: center;
+                        flex-direction: column;
+                        cursor: pointer;
+                        &:hover{
+                            color: $main-color;
+                        }
+                        span{
+                            margin-top: 8px;
+                        }
+                    }
+                }
             }
 		}
 	}
-}</style>
+    .homepage-list {
+        margin-top: 30px;
+        background-color: white;
+        padding: 20px;
+        border-radius: 20px;
+        span {
+            margin-left: 30px;
+            font-size: 20px;
+            display: block;
+            margin-bottom: 20px;
+        }
+    }
+}
+</style>
