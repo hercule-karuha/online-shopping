@@ -76,6 +76,7 @@ diesel::joinable!(orders -> products (product_id));
 diesel::joinable!(orders -> users (user_id));
 diesel::joinable!(shopping_cart -> orders (order_id));
 diesel::joinable!(shopping_cart -> users (user_id));
+diesel::joinable!(stores_products_unit -> products (product_id));
 diesel::joinable!(stores_products_unit -> stores (store_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
