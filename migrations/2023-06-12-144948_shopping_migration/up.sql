@@ -1,9 +1,8 @@
-
 create table users
 (
     user_id   serial
         primary key,
-    user_name   varchar(20),
+    user_name   varchar(20) unique,
     password  varchar(20),
     gender    INTEGER,
     user_type INTEGER,
