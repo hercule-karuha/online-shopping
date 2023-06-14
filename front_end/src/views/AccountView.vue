@@ -84,9 +84,9 @@ const accountType = ref(route.params.type)
 const formData = ref({})
 const changeType = () => {
     if (accountType.value === 'login') {
-        router.push('/account/register')
+        router.replace('/account/register')
     } else {
-        router.push('/account/login')
+        router.replace('/account/login')
     }
 }
 
@@ -141,7 +141,7 @@ const loginOrRegister = async () => {
 
 <style lang="scss" scoped>
 $main-color: rgb(205, 198, 235);
-$main-color-hover: rgb(247, 242, 255);
+$white-hover: rgb(243, 255, 247);
 main{
     height: 100vh;
     width: 100%;
@@ -210,7 +210,7 @@ main{
                 cursor: pointer;
                 transition: all 0.2s;
                 &:hover{
-                    background-color: $main-color-hover;
+                    background-color: $white-hover;
                 }
                 color: $main-color;
             }

@@ -89,6 +89,9 @@
         </div>
       </div>
     </nav>
+    <div class="recommend">
+
+    </div>
   </main>
 </template>
 
@@ -133,6 +136,8 @@ const goAccount = (type) => {
 
 <style lang="scss" scoped>
 $bg-gray: #ddd;
+$main-color: rgb(205, 198, 235);
+$main-color-hover: rgb(218, 212, 247);
 main {
 	// height: 100vh;
 	width: var(--global-width);
@@ -302,7 +307,7 @@ main {
 		.recommend {
 			width: 760px;
 			height: 100%;
-			background-color: pink;
+			background-color: $main-color;
 			border-radius: 10px;
 		}
 
@@ -333,12 +338,12 @@ main {
                     div {
                         font-size: 20px;
                         color: white;
-                        background-color: pink;
+                        background-color: $main-color;
                         padding: 6px 18px;
                         border-radius: 20px;
                         cursor: pointer;
                         &:hover{
-                            background-color: rgb(255, 154, 154);
+                            background-color: $main-color-hover;
                         }
                     }
                 }
