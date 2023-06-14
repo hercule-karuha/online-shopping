@@ -3,8 +3,7 @@
 diesel::table! {
     orders (order_id) {
         order_id -> Int4,
-        user_id -> Int4,
-        product_id -> Int4,
+        store_product_id -> Int4,
         purchase_time -> Timestamp,
         total_price -> Numeric,
         quantity -> Int4,
@@ -48,9 +47,18 @@ diesel::table! {
 }
 
 diesel::table! {
-    stores_products_unit (store_id, product_id) {
+    stores_products_unit (store_product_id) {
+        store_product_id -> Int4,
         store_id -> Int4,
         product_id -> Int4,
+    }
+}
+
+diesel::table! {
+    user_stores_unit (user_stores_id) {
+        user_stores_id -> Int4,
+        user_id -> Int4,
+        store_id -> Int4,
     }
 }
 
@@ -72,12 +80,12 @@ diesel::table! {
     }
 }
 
-diesel::joinable!(orders -> products (product_id));
-diesel::joinable!(orders -> users (user_id));
 diesel::joinable!(shopping_cart -> orders (order_id));
 diesel::joinable!(shopping_cart -> users (user_id));
 diesel::joinable!(stores_products_unit -> products (product_id));
 diesel::joinable!(stores_products_unit -> stores (store_id));
+diesel::joinable!(user_stores_unit -> stores (store_id));
+diesel::joinable!(user_stores_unit -> users (user_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
     orders,
@@ -86,5 +94,6 @@ diesel::allow_tables_to_appear_in_same_query!(
     shopping_cart,
     stores,
     stores_products_unit,
+    user_stores_unit,
     users,
 );

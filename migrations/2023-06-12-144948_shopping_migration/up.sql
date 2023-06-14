@@ -107,8 +107,6 @@ comment on column products.sales is '销量';
 
 comment on column products.stock is '库存量';
 
-alter table products
-    owner to postgres;
 
 create index idx_products_price
     on products (price);
@@ -193,7 +191,6 @@ comment on  column user_stores_unit.user_stores_id is '用户商铺ID';
 comment on column user_stores_unit.user_id is '用户id';
 
 comment on column user_stores_unit.store_id is '商铺ID';
-
 
 
 

@@ -13,4 +13,3 @@ drop table public.user_stores_unit;
 drop table public.users;
 
 drop table public.stores;
-
