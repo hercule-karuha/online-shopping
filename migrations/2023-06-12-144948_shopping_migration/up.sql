@@ -69,7 +69,6 @@ comment on column product_images.image_id is '商品图片ID';
 
 comment on column product_images.path is '商品图片相对路径';
 
-
 create index idx_product_images_image_id
     on product_images (image_id);
 
@@ -106,9 +105,6 @@ comment on column products.price is '单价， DECIMAL(10,2)，表示为数字�
 comment on column products.sales is '销量';
 
 comment on column products.stock is '库存量';
-
-alter table products
-    owner to postgres;
 
 create index idx_products_price
     on products (price);
