@@ -4,13 +4,16 @@ use axum::{
 };
 
 use axum_macros::debug_handler;
-use axum_sessions::{extractors::WritableSession, PersistencePolicy};
 
 use diesel::insert_into;
 use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool};
 use diesel::PgConnection;
 use serde_json::{json, Value};
+
+use md5;
+
+use crate::model::*;
 
 #[debug_handler]
 pub async fn register(
@@ -21,7 +24,7 @@ pub async fn register(
     let user_password = payload["password"].as_str().unwrap();
     if user_password.len() < 8 || user_password.len() > 20 {
         return response::Json(json!({
-            "code": 500,
+            "code": 600,
             "msg": "密码必须在8~20位之间"
         }));
     }
@@ -57,31 +60,49 @@ pub async fn register(
         Err(_) => {
             // 插入失败
             response::Json(json!({
-                "code": 500,
+                "code": 600,
                 "msg": "用户名不唯一"
             }))
         }
     }
 }
 
-pub async fn test_session(session: WritableSession) -> response::Json<Value> {
-    match session.get::<i32>("id") {
-        Some(_) => response::Json(json!({
-            "msg": "ok"
+pub async fn login(
+    State(pool): State<Pool<ConnectionManager<PgConnection>>>,
+    Json(payload): Json<Value>,
+) -> response::Json<Value> {
+    use crate::schema::users::dsl::*;
+
+    let name = payload["userName"].as_str().unwrap();
+    let md5_password = payload["password"].as_str().unwrap();
+
+    let conn = &mut pool.get().unwrap();
+
+    let user = users
+        .filter(user_name.eq(name))
+        .select(User::as_select())
+        .first(conn);
+
+    match user {
+        Err(_) => response::Json(json!({
+            "code": 600,
+            "msg": "尚未注册"
         })),
-        None => response::Json(json!({
-            "msg": "fail"
-        })),
+        Ok(usr) => {
+            if md5_password == format!("{:x}", md5::compute(usr.password.unwrap())) {
+                response::Json(json!({
+                    "code": 600,
+                    "msg": "用户名或密码错误"
+                }))
+            } else {
+                response::Json(json!({
+                    "code": 200,
+                    "msg": "登录成功",
+                    "data": {
+                        "userId": usr.user_id.to_string()
+                    }
+                }))
+            }
+        }
     }
 }
-
-pub async fn test_login(mut session: WritableSession) -> response::Json<Value> {
-    session.insert("id", 20i32).expect("Could not store the answer.");
-    response::Json(json!({ "msg": "ok" , "id" : session.get::<i32>("id").unwrap()}))
-}
-
-// pub async fn login(
-//     State(pool): State<Pool<ConnectionManager<PgConnection>>>,
-//     Json(payload): Json<Value>,
-// ) -> response::Json<Value> {
-// }

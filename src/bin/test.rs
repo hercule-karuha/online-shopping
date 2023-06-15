@@ -1,5 +1,4 @@
 use hyper::body::to_bytes;
-use hyper::header::{HeaderMap, COOKIE};
 use hyper::Client;
 use serde_json::json;
 
@@ -15,17 +14,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         "sex": "1" //0(未知) 1(男) 2(女)
     });
 
-    let mut headers = HeaderMap::new();
-    headers.insert("COOKIE", "666");
-
     // 将 JSON 数据转换为字节数组
     let body = serde_json::to_vec(&data)?;
-
-    let request1 = hyper::Request::builder()
-        .method(hyper::Method::POST)
-        .uri("http://localhost:3000/login")
-        .header("Content-Type", "application/json");
-
     // 构建 POST 请求
     let request = hyper::Request::builder()
         .method(hyper::Method::POST)
