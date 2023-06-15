@@ -26,10 +26,6 @@ comment on column users.phone is '用户电话';
 
 comment on column users.address is '用户/商家地址';
 
-
-create index idx_users_account_password
-    on users (user_name, password);
-
 create table stores
 (
     store_id serial
