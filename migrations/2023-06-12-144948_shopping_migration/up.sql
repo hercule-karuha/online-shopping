@@ -70,10 +70,6 @@ comment on column products.price is '单价， DECIMAL(10,2)，表示为数字�
 comment on column products.sales is '销量';
 comment on column products.stock is '库存量';
 
-create EXTENSION if not exists btree_gist ;
-
-create index idx_products_price_sales_stock on products using gist(price,sales,stock);
-
 create table orders
 (
     order_id      serial
@@ -98,6 +94,8 @@ comment on column orders.purchase_time is '购买时间，默认当前时间';
 comment on column orders.total_price is '应付金额';
 
 comment on column orders.quantity is '购买数量';
+
+create EXTENSION if not exists btree_gist ;
 
 create index id_orders_store_product_id
     on orders using gist(user_id,product_id);
