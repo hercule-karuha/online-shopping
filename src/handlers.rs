@@ -2,7 +2,10 @@ use axum::{
     extract::{Json, State},
     response,
 };
+
 use axum_macros::debug_handler;
+use axum_sessions::{extractors::WritableSession, PersistencePolicy};
+
 use diesel::insert_into;
 use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool};
@@ -29,6 +32,7 @@ pub async fn register(
         "2" => 2,
         _ => 0,
     };
+
     let conn = &mut pool.get().unwrap();
 
     let id = insert_into(users)
@@ -59,3 +63,25 @@ pub async fn register(
         }
     }
 }
+
+pub async fn test_session(session: WritableSession) -> response::Json<Value> {
+    match session.get::<i32>("id") {
+        Some(_) => response::Json(json!({
+            "msg": "ok"
+        })),
+        None => response::Json(json!({
+            "msg": "fail"
+        })),
+    }
+}
+
+pub async fn test_login(mut session: WritableSession) -> response::Json<Value> {
+    session.insert("id", 20i32).expect("Could not store the answer.");
+    response::Json(json!({ "msg": "ok" , "id" : session.get::<i32>("id").unwrap()}))
+}
+
+// pub async fn login(
+//     State(pool): State<Pool<ConnectionManager<PgConnection>>>,
+//     Json(payload): Json<Value>,
+// ) -> response::Json<Value> {
+// }
