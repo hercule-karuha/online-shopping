@@ -5,6 +5,8 @@ use axum::{
 
 use axum_macros::debug_handler;
 
+use axum_sessions::extractors::WritableSession;
+
 use diesel::insert_into;
 use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool};
@@ -18,6 +20,7 @@ use crate::model::*;
 #[debug_handler]
 pub async fn register(
     State(pool): State<Pool<ConnectionManager<PgConnection>>>,
+
     Json(payload): Json<Value>,
 ) -> response::Json<Value> {
     use crate::schema::users::dsl::*;
@@ -100,6 +103,7 @@ pub async fn register(
 
 pub async fn login(
     State(pool): State<Pool<ConnectionManager<PgConnection>>>,
+    mut session: WritableSession,
     Json(payload): Json<Value>,
 ) -> response::Json<Value> {
     use crate::schema::users::dsl::*;
@@ -146,6 +150,13 @@ pub async fn login(
                     "data": null,
                 }))
             } else {
+                session
+                    .insert("id", usr.user_id)
+                    .expect("cannot store value");
+                session
+                    .insert("type", usr.user_type)
+                    .expect("cannot store value");
+                
                 response::Json(json!({
                     "code": 200,
                     "msg": "请求成功",

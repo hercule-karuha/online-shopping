@@ -5,10 +5,10 @@ use axum_sessions::{async_session::MemoryStore, SessionLayer};
 use diesel::pg::PgConnection;
 use diesel::r2d2::{ConnectionManager, Pool};
 use dotenvy::dotenv;
-use handlers::*;
+use account_handlers::*;
 use std::env;
 
-pub mod handlers;
+pub mod account_handlers;
 pub mod model;
 pub mod schema;
 
