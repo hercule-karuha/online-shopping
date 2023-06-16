@@ -21,16 +21,46 @@ pub async fn register(
     Json(payload): Json<Value>,
 ) -> response::Json<Value> {
     use crate::schema::users::dsl::*;
-    let user_password = payload["password"].as_str().unwrap();
+    let usr_name = match payload.get("userName").and_then(Value::as_str) {
+        Some(uname) => uname,
+        None => {
+            return response::Json(json!({
+                "code": 600,
+                "msg": "请求参数错误",
+                "data": null,
+            }));
+        }
+    };
+    let sex = match payload.get("sex").and_then(Value::as_str) {
+        Some(usex) => usex,
+        None => {
+            return response::Json(json!({
+                "code": 600,
+                "msg": "请求参数错误",
+                "data": null,
+            }));
+        }
+    };
+
+    let user_password = match payload["password"].as_str() {
+        Some(upassword) => upassword,
+        None => {
+            return response::Json(json!({
+                "code": 600,
+                "msg": "请求参数错误",
+                "data": null,
+            }));
+        }
+    };
     if user_password.len() < 8 || user_password.len() > 20 {
         return response::Json(json!({
             "code": 600,
-            "msg": "密码必须在8~20位之间"
+            "msg": "请求参数错误",
+            "data": null,
         }));
     }
-    let usr_name = payload.get("userName").and_then(Value::as_str).unwrap();
-    let sex = payload.get("sex").and_then(Value::as_str);
-    let user_gender = match sex.unwrap() {
+
+    let user_gender = match sex {
         "1" => 1,
         "2" => 2,
         _ => 0,
@@ -61,7 +91,8 @@ pub async fn register(
             // 插入失败
             response::Json(json!({
                 "code": 600,
-                "msg": "用户名不唯一"
+                "msg": "请求参数错误",
+                "data": null,
             }))
         }
     }
@@ -73,8 +104,26 @@ pub async fn login(
 ) -> response::Json<Value> {
     use crate::schema::users::dsl::*;
 
-    let name = payload["userName"].as_str().unwrap();
-    let md5_password = payload["password"].as_str().unwrap();
+    let name = match payload["userName"].as_str() {
+        Some(uname) => uname,
+        None => {
+            return response::Json(json!({
+                "code": 600,
+                "msg": "请求参数错误",
+                "data": null,
+            }));
+        }
+    };
+    let md5_password = match payload["password"].as_str() {
+        Some(upassword) => upassword,
+        None => {
+            return response::Json(json!({
+                "code": 600,
+                "msg": "请求参数错误",
+                "data": null,
+            }));
+        }
+    };
 
     let conn = &mut pool.get().unwrap();
 
@@ -86,20 +135,25 @@ pub async fn login(
     match user {
         Err(_) => response::Json(json!({
             "code": 600,
-            "msg": "尚未注册"
+            "msg": "请求参数错误",
+            "data": null,
         })),
         Ok(usr) => {
             if md5_password == format!("{:x}", md5::compute(usr.password.unwrap())) {
                 response::Json(json!({
                     "code": 600,
-                    "msg": "用户名或密码错误"
+                    "msg": "请求参数错误",
+                    "data": null,
                 }))
             } else {
                 response::Json(json!({
                     "code": 200,
-                    "msg": "登录成功",
+                    "msg": "请求成功",
                     "data": {
-                        "userId": usr.user_id.to_string()
+                        "userId": usr.user_id.to_string(),
+                        "userName": usr.user_name.unwrap().to_string(), //用户昵称
+                        "sex": usr.gender.unwrap().to_string(), //性别
+                        "userType": usr.user_type.unwrap().to_string() //是否是商家 0不是 1 是
                     }
                 }))
             }
