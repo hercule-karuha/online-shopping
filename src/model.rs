@@ -10,3 +10,13 @@ pub struct User {
     pub gender: Option<i32>,
     pub user_type: Option<i32>,
 }
+
+#[derive(Queryable, Selectable)]
+#[diesel(table_name = crate::schema::stores)]
+#[diesel(check_for_backend(diesel::pg::Pg))]
+pub struct Store {
+    pub store_id: i32,
+    pub user_id: Option<i32>,
+    pub name: Option<String>,
+    pub address: Option<String>,
+}

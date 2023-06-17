@@ -6,11 +6,14 @@ use diesel::pg::PgConnection;
 use diesel::r2d2::{ConnectionManager, Pool};
 use dotenvy::dotenv;
 use account_handlers::*;
+use store_handlers::*;
 use std::env;
 
+pub mod store_handlers;
 pub mod account_handlers;
 pub mod model;
 pub mod schema;
+pub mod error_return;
 
 #[tokio::main]
 async fn main() {
@@ -22,8 +25,9 @@ async fn main() {
         SessionLayer::new(store, secret).with_same_site_policy(axum_sessions::SameSite::None);
 
     let app = Router::new()
-        .route("/api/register", post(register))
-        .route("/api/login", post(login))
+        .route("/api/user/register", post(register))
+        .route("/api/user/login", post(login))
+        .route("/api/store/newStore", post(new_store))
         .with_state(pool)
         .layer(session_layer);
 

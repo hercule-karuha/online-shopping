@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 md5 = "0.7.0"
-axum = "0.6.18"
+axum = { version = "0.6.18", features = ["multipart"] }
 axum-macros = "0.3.7"
 axum-sessions = "0.5.0"
 diesel = { version = "2.1.0", features = ["postgres","r2d2"] }

@@ -76,18 +76,17 @@ pub async fn register(
             user_name.eq(usr_name),
             password.eq(user_password),
             gender.eq(user_gender),
+            user_type.eq(0),
         ))
         .returning(user_id)
         .execute(conn);
     match id {
-        Ok(inserted_id) => {
+        Ok(_) => {
             // 插入成功
             response::Json(json!({
                 "code": 200,
                 "msg": "注册成功",
-                "data": {
-                    "userId": inserted_id.to_string()
-                }
+                "data": null,
             }))
         }
         Err(_) => {
@@ -156,7 +155,7 @@ pub async fn login(
                 session
                     .insert("type", usr.user_type)
                     .expect("cannot store value");
-                
+
                 response::Json(json!({
                     "code": 200,
                     "msg": "请求成功",
