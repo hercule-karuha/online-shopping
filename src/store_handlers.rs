@@ -11,7 +11,7 @@ use diesel::r2d2::{ConnectionManager, Pool};
 use diesel::PgConnection;
 use serde_json::{json, Value};
 
-use tokio::fs::File;
+use tokio::{fs::File};
 use tokio::io::AsyncWriteExt;
 
 use crate::model::*;
@@ -30,12 +30,12 @@ pub async fn new_store(
             return no_login_error();
         }
     };
-    match session.get::<i32>("type") {
-        Some(1) => 1,
-        _ => {
-            return parameter_error();
-        }
-    };
+    // match session.get::<i32>("type") {
+    //     Some(1) => 1,
+    //     _ => {
+    //         return parameter_error();
+    //     }
+    // };
     let store_name = match multipart.next_field().await {
         Ok(sname) => sname.unwrap().text().await.unwrap(),
         Err(_) => {
@@ -72,12 +72,20 @@ pub async fn new_store(
         .get_result(conn);
 
     if let Some(index) = cover_type.rfind('/') {
-        let extension = &cover_type[index..];
-        let path = "image/cover".to_string()
+        let extension = &cover_type[index + 1..];
+        let path = "images/cover".to_string()
+            + "/"
             + &s_info.as_ref().unwrap().store_id.to_string()
             + "."
             + extension;
-        let mut file = File::create(path).await.expect("file error");
+        println!("{}", path);
+        let mut file = match File::create(path).await {
+            Ok(fe) => fe,
+            Err(error) => {
+                println!("{}", error);
+                return server_error();
+            }
+        };
         file.write_all(&cover).await.expect("write error");
     }
 

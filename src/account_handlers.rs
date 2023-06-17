@@ -29,17 +29,17 @@ pub async fn register(
         None => {
             return response::Json(json!({
                 "code": 600,
-                "msg": "请求参数错误",
+                "msg": "没有输入用户名",
                 "data": null,
             }));
         }
     };
-    let sex = match payload.get("sex").and_then(Value::as_str) {
+    let sex = match payload.get("gender").and_then(Value::as_str) {
         Some(usex) => usex,
         None => {
             return response::Json(json!({
                 "code": 600,
-                "msg": "请求参数错误",
+                "msg": "没有输入性别",
                 "data": null,
             }));
         }
@@ -50,7 +50,7 @@ pub async fn register(
         None => {
             return response::Json(json!({
                 "code": 600,
-                "msg": "请求参数错误",
+                "msg": "没有输入密码",
                 "data": null,
             }));
         }
@@ -58,7 +58,7 @@ pub async fn register(
     if user_password.len() < 8 || user_password.len() > 20 {
         return response::Json(json!({
             "code": 600,
-            "msg": "请求参数错误",
+            "msg": "密码必须在8~20位之间",
             "data": null,
         }));
     }
@@ -93,7 +93,7 @@ pub async fn register(
             // 插入失败
             response::Json(json!({
                 "code": 600,
-                "msg": "请求参数错误",
+                "msg": "用户名不唯一",
                 "data": null,
             }))
         }
@@ -112,7 +112,7 @@ pub async fn login(
         None => {
             return response::Json(json!({
                 "code": 600,
-                "msg": "请求参数错误",
+                "msg": "没有输入用户名",
                 "data": null,
             }));
         }
@@ -122,7 +122,7 @@ pub async fn login(
         None => {
             return response::Json(json!({
                 "code": 600,
-                "msg": "请求参数错误",
+                "msg": "没有输入密码",
                 "data": null,
             }));
         }
@@ -138,14 +138,14 @@ pub async fn login(
     match user {
         Err(_) => response::Json(json!({
             "code": 600,
-            "msg": "请求参数错误",
+            "msg": "尚未注册",
             "data": null,
         })),
         Ok(usr) => {
             if md5_password == format!("{:x}", md5::compute(usr.password.unwrap())) {
                 response::Json(json!({
                     "code": 600,
-                    "msg": "请求参数错误",
+                    "msg": "密码错误",
                     "data": null,
                 }))
             } else {
@@ -158,7 +158,7 @@ pub async fn login(
 
                 response::Json(json!({
                     "code": 200,
-                    "msg": "请求成功",
+                    "msg": "登陆成功",
                     "data": {
                         "userId": usr.user_id.to_string(),
                         "userName": usr.user_name.unwrap().to_string(), //用户昵称

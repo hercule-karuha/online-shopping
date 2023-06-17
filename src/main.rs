@@ -22,7 +22,7 @@ async fn main() {
     let store = MemoryStore::new();
     let secret = b"66666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666"; // MUST be at least 64 bytes!
     let session_layer =
-        SessionLayer::new(store, secret).with_same_site_policy(axum_sessions::SameSite::None);
+        SessionLayer::new(store, secret).with_same_site_policy(axum_sessions::SameSite::Lax).with_secure(false);
 
     let app = Router::new()
         .route("/api/user/register", post(register))
