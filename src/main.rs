@@ -1,19 +1,22 @@
-use axum::{routing::post, Router, Server};
+use axum::{
+    routing::{get, post},
+    Router, Server,
+};
 
 use axum_sessions::{async_session::MemoryStore, SessionLayer};
 
+use account_handlers::*;
 use diesel::pg::PgConnection;
 use diesel::r2d2::{ConnectionManager, Pool};
 use dotenvy::dotenv;
-use account_handlers::*;
-use store_handlers::*;
 use std::env;
+use store_handlers::*;
 
-pub mod store_handlers;
 pub mod account_handlers;
+pub mod error_return;
 pub mod model;
 pub mod schema;
-pub mod error_return;
+pub mod store_handlers;
 
 #[tokio::main]
 async fn main() {
@@ -21,13 +24,15 @@ async fn main() {
 
     let store = MemoryStore::new();
     let secret = b"66666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666"; // MUST be at least 64 bytes!
-    let session_layer =
-        SessionLayer::new(store, secret).with_same_site_policy(axum_sessions::SameSite::Lax).with_secure(false);
+    let session_layer = SessionLayer::new(store, secret)
+        .with_same_site_policy(axum_sessions::SameSite::Lax)
+        .with_secure(false);
 
     let app = Router::new()
         .route("/api/user/register", post(register))
         .route("/api/user/login", post(login))
         .route("/api/store/newStore", post(new_store))
+        .route("/api/user/getUserInfo", get(get_user_info))
         .with_state(pool)
         .layer(session_layer);
 
