@@ -155,6 +155,12 @@ pub async fn login(
                 session
                     .insert("type", usr.user_type)
                     .expect("cannot store value");
+                session
+                    .insert("gender", usr.gender)
+                    .expect("cannot store value");
+                session
+                    .insert("name", usr.user_name.as_ref().unwrap())
+                    .expect("cannot store value");
 
                 response::Json(json!({
                     "code": 200,
@@ -169,4 +175,17 @@ pub async fn login(
             }
         }
     }
+}
+
+pub async fn get_user_info(session: WritableSession) -> response::Json<Value> {
+    response::Json(json!({
+        "code": 200,
+        "msg": "登陆成功",
+        "data": {
+            "userId": session.get::<i32>("id").unwrap(),
+            "userName": session.get::<String>("name").unwrap(), //用户昵称
+            "sex": session.get::<i32>("gender").unwrap(), //性别
+            "userType": session.get::<i32>("type").unwrap() //是否是商家 0不是 1 是
+        }
+    }))
 }

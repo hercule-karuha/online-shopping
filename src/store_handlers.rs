@@ -5,13 +5,13 @@ use axum::{
 
 use axum_sessions::extractors::ReadableSession;
 
-use diesel::insert_into;
 use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool};
 use diesel::PgConnection;
+use diesel::{insert_into, update};
 use serde_json::{json, Value};
 
-use tokio::{fs::File};
+use tokio::fs::File;
 use tokio::io::AsyncWriteExt;
 
 use crate::model::*;
@@ -24,6 +24,7 @@ pub async fn new_store(
     mut multipart: Multipart,
 ) -> Json<Value> {
     use crate::schema::stores::dsl::*;
+    use crate::schema::users::dsl;
     let usr_id = match session.get::<i32>("id") {
         Some(id) => id,
         None => {
@@ -70,6 +71,11 @@ pub async fn new_store(
         ))
         .returning(Store::as_returning())
         .get_result(conn);
+
+    update(dsl::users)
+        .filter(dsl::user_id.eq(usr_id))
+        .set(dsl::user_type.eq(1))
+        .execute(conn).expect("update fail");
 
     if let Some(index) = cover_type.rfind('/') {
         let extension = &cover_type[index + 1..];
