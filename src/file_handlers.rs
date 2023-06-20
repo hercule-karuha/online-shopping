@@ -71,7 +71,6 @@ pub async fn upload_image(session: ReadableSession, mut multipart: Multipart) ->
 }
 
 pub async fn get_image(
-    session: ReadableSession,
     Path(image_path): Path<String>,
 ) -> Response<Full<Bytes>> {
     let mut f = match File::open(image_path).await {
