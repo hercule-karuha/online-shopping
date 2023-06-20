@@ -14,7 +14,7 @@ use hyper::{header::CONTENT_TYPE, StatusCode};
 use serde_json::{json, Value};
 
 use tokio::fs::File;
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::io::{AsyncReadExt, AsyncWriteExt, BufReader};
 
 use uuid::Uuid;
 
@@ -83,8 +83,11 @@ pub async fn get_image(
         }
     };
 
+    let mut reader = BufReader::new(f);
     let mut buffer = Vec::new();
-    match f.read_to_end(&mut buffer).await {
+
+
+    match reader.read_to_end(&mut buffer).await {
         Ok(_) => Response::builder()
             .header(CONTENT_TYPE, "image")
             .body(Full::from(buffer))
