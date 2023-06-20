@@ -31,12 +31,12 @@ pub async fn new_store(
             return no_login_error();
         }
     };
-    // match session.get::<i32>("type") {
-    //     Some(1) => 1,
-    //     _ => {
-    //         return parameter_error();
-    //     }
-    // };
+    match session.get::<i32>("type") {
+        Some(0) => 0,
+        _ => {
+            return parameter_error();
+        }
+    };
     let store_name = match multipart.next_field().await {
         Ok(sname) => sname.unwrap().text().await.unwrap(),
         Err(_) => {
@@ -79,8 +79,7 @@ pub async fn new_store(
 
     if let Some(index) = cover_type.rfind('/') {
         let extension = &cover_type[index + 1..];
-        let path = "images/cover".to_string()
-            + "/"
+        let path = "images/cover/".to_string()
             + &s_info.as_ref().unwrap().store_id.to_string()
             + "."
             + extension;

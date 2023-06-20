@@ -17,6 +17,7 @@ pub mod error_return;
 pub mod model;
 pub mod schema;
 pub mod store_handlers;
+pub mod file_handlers;
 
 #[tokio::main]
 async fn main() {
