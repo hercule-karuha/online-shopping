@@ -5,19 +5,21 @@ use axum::{
 
 use axum_sessions::{async_session::MemoryStore, SessionLayer};
 
-use account_handlers::*;
 use diesel::pg::PgConnection;
 use diesel::r2d2::{ConnectionManager, Pool};
 use dotenvy::dotenv;
 use std::env;
+
+use account_handlers::*;
+use file_handlers::*;
 use store_handlers::*;
 
 pub mod account_handlers;
 pub mod error_return;
+pub mod file_handlers;
 pub mod model;
 pub mod schema;
 pub mod store_handlers;
-pub mod file_handlers;
 
 #[tokio::main]
 async fn main() {
@@ -34,6 +36,8 @@ async fn main() {
         .route("/api/user/login", post(login))
         .route("/api/store/newStore", post(new_store))
         .route("/api/user/getUserInfo", get(get_user_info))
+        .route("/api/file/uploadImage", post(upload_image))
+        .route("/api/file/getImage/:image_path", get(get_image))
         .with_state(pool)
         .layer(session_layer);
 
