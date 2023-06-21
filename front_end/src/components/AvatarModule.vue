@@ -3,7 +3,7 @@
     class="content"
     :style="{'width':size + 'px', 'height':size + 'px'}"
   >
-    <img 
+    <img
       v-if="userId !== ''"
       :src="proxy.globalInfo.avatarUrl+userId"
       @click="goUserCenter"
@@ -13,11 +13,11 @@
       class="fake-avatar"
     >
       未登录
-    </div> 
+    </div>
   </div>
 </template>
 
-<script setup> 
+<script setup>
 import { getCurrentInstance } from 'vue'
 import { useRouter } from 'vue-router'
 const { proxy } = getCurrentInstance()
@@ -51,7 +51,7 @@ const goUserCenter = () => {
 <style lang="scss" scoped>
 .content{
     border-radius: 50%;
-    
+
     img{
         width: 100%;
         height: 100%;

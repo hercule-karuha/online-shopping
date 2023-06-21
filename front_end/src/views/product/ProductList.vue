@@ -2,19 +2,19 @@
   <main>
     <DataList>
       <template #default="{data}">
-        <CommodityItem :data="data" />
+        <ProductItem :data="data" />
       </template>
     </DataList>
   </main>
 </template>
 
 <script setup>
-import DataList from './DataList.vue'
-import CommodityItem from './CommodityItem.vue'
+import DataList from '@/component/DataList.vue'
+import ProductItem from './ProductItem.vue'
 const props = defineProps({
     data: {
         type: Array,
-        default: []
+        default: () => []
     }
 })
 </script>
