@@ -1,4 +1,5 @@
 use axum::{
+    extract::DefaultBodyLimit,
     routing::{get, post},
     Router, Server,
 };
@@ -38,8 +39,12 @@ async fn main() {
         .route("/api/user/getUserInfo", get(get_user_info))
         .route("/api/file/uploadImage", post(upload_image))
         .route("/api/file/getImage/*image_path", get(get_image))
+        .route("/api//file/getAvatar/:id", get(get_avatar))
+        .route("/api/file/getProductCover/:id", get(get_products_cover))
+        .route("/api/file/getStoreCover/:id", get(get_store_cover))
         .with_state(pool)
-        .layer(session_layer);
+        .layer(session_layer)
+        .layer(DefaultBodyLimit::max(1024 * 1024 * 10));
 
     let addr = "0.0.0.0:3000".parse().unwrap();
     Server::bind(&addr)

@@ -51,7 +51,6 @@ pub async fn new_store(
     };
 
     let cover_field = cover_field.unwrap();
-    let cover_type = cover_field.content_type().unwrap().to_string();
     let cover = cover_field.bytes().await.unwrap();
 
     let store_address = match multipart.next_field().await {
@@ -77,12 +76,8 @@ pub async fn new_store(
         .set(dsl::user_type.eq(1))
         .execute(conn).expect("update fail");
 
-    if let Some(index) = cover_type.rfind('/') {
-        let extension = &cover_type[index + 1..];
-        let path = "images/cover/".to_string()
-            + &s_info.as_ref().unwrap().store_id.to_string()
-            + "."
-            + extension;
+        let path = "images/store_cover/".to_string()
+            + &s_info.as_ref().unwrap().store_id.to_string();
         println!("{}", path);
         let mut file = match File::create(path).await {
             Ok(fe) => fe,
@@ -92,7 +87,6 @@ pub async fn new_store(
             }
         };
         file.write_all(&cover).await.expect("write error");
-    }
 
     Json(json!({
         "code": 200,
