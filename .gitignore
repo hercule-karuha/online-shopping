@@ -1,2 +1,11 @@
 /target
-images/cover/*
+images/avatar/*
+images/store_cover/*
+images/products_cover/*
+images/products/*
+
+!images/avatar/
+!images/store_cover/
+!images/products_cover/
+!images/products/
+!images/avatar/deafult.png
