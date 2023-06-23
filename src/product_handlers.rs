@@ -1,5 +1,5 @@
 use axum::{
-    extract::{Multipart, State},
+    extract::{Multipart, Path, State},
     response::Json,
 };
 
@@ -198,4 +198,56 @@ pub async fn edit_product(
         })),
         Err(_) => server_error(),
     }
+}
+
+pub async fn get_product_info(
+    State(pool): State<Pool<ConnectionManager<PgConnection>>>,
+    session: ReadableSession,
+    Path(id): Path<String>,
+) -> Json<Value> {
+    use crate::schema::products::dsl::*;
+    use crate::schema::stores;
+    use crate::schema::stores::dsl::*;
+    match session.get::<i32>("id") {
+        Some(_) => {}
+        None => {
+            return no_login_error();
+        }
+    };
+
+    let prod_id = match id.parse::<i32>() {
+        Ok(pid) => pid,
+        Err(_) => {
+            return parameter_error();
+        }
+    };
+
+    let conn = &mut pool.get().unwrap();
+
+    let prod = products
+        .select(NewProduct::as_select())
+        .filter(product_id.eq(prod_id))
+        .first(conn)
+        .unwrap();
+
+    let sto_address = stores
+        .select(address)
+        .filter(stores::dsl::store_id.eq(&prod.store_id.unwrap()))
+        .first::<Option<String>>(conn);
+
+    Json(json!({
+        "code": 200,
+        "msg": "请求成功",
+        "data": {
+            "productId" : prod_id.to_string(),
+            "productName" : prod.name.unwrap(),
+            "description" : prod.description.unwrap(),
+            "storeId" : prod.store_id.unwrap().to_string(),
+            "detailImages" : prod.detail_images.unwrap(),
+            "price" : prod.price.unwrap().to_string(),
+            "sales" : prod.sales.unwrap().to_string(),
+            "stock" : prod.stock.unwrap().to_string(),
+            "address" : sto_address.unwrap()
+        },
+    }))
 }

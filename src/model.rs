@@ -21,7 +21,7 @@ pub struct Store {
     pub address: Option<String>,
 }
 
-#[derive(Insertable, AsChangeset)]
+#[derive(Insertable, AsChangeset, Queryable, Selectable)]
 #[diesel(table_name = crate::schema::products)]
 pub struct NewProduct {
     pub store_id: Option<i32>,
@@ -30,6 +30,7 @@ pub struct NewProduct {
     pub detail_images: Option<String>,
     pub price: Option<f64>,
     pub stock: Option<i32>,
+    pub sales: Option<i32>,
 }
 
 impl NewProduct {
@@ -41,6 +42,7 @@ impl NewProduct {
             detail_images: None,
             price: None,
             stock: None,
+            sales:Some(0),
         }
     }
 }

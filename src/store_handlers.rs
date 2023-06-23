@@ -1,5 +1,5 @@
 use axum::{
-    extract::{Multipart, State},
+    extract::{Multipart, Path, State},
     response::Json,
 };
 
@@ -95,6 +95,47 @@ pub async fn new_store(
             "storeName": s_info.as_ref().unwrap().name, //店铺名称
             "sroreId": s_info.unwrap().store_id.to_string(), //店铺id
             "userId": usr_id.to_string(),//用户id
+        },
+    }))
+}
+
+pub async fn get_store_info(
+    State(pool): State<Pool<ConnectionManager<PgConnection>>>,
+    session: ReadableSession,
+    Path(id): Path<String>,
+) -> Json<Value> {
+    use crate::schema::stores::dsl::*;
+
+    match session.get::<i32>("id") {
+        Some(uid) => uid,
+        None => {
+            return no_login_error();
+        }
+    };
+
+    let st_id = match id.parse::<i32>() {
+        Ok(sid) => sid,
+        Err(_) => {
+            return parameter_error();
+        }
+    };
+
+    let conn = &mut pool.get().unwrap();
+
+    let store_res = stores
+        .select(Store::as_select())
+        .filter(store_id.eq(st_id))
+        .first(conn)
+        .unwrap();
+
+    Json(json!({
+        "code": 200,
+        "msg": "请求成功",
+        "data": {
+            "name" : store_res.name.unwrap(),
+            "userId" : store_res.user_id.unwrap().to_string(),
+            "address" :  store_res.address.unwrap(),
+            "storeId" : st_id.to_string(),
         },
     }))
 }
