@@ -83,6 +83,7 @@ create table orders
     quantity      integer
     user_phone     varchar(20),
     user_address   varchar(100),
+    store_phone    varchar(20),
     store_address varchar(100)
 );
 
