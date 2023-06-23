@@ -81,6 +81,9 @@ create table orders
     purchase_time timestamp ,
     total_price   float,
     quantity      integer
+    user_phone     varchar(20),
+    user_address   varchar(100),
+    store_address varchar(100)
 );
 
 comment on table orders is '订单表';
@@ -107,8 +110,6 @@ create table shopping_carts(
         references products,
     quantity INTEGER,
     primary key (user_id,product_id)
-    phone     varchar(20),
-    address   varchar(100)
 );
 
 
