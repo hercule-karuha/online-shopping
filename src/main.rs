@@ -46,6 +46,7 @@ async fn main() {
         .route("/api/file/getStoreCover/:id", get(get_store_cover))
         .route("/api/product/newProduct", post(new_product))
         .route("/api/user/editUserinfo", post(edit_user))
+        .route("/api/product/editProduct", post(edit_product))
         .with_state(pool)
         .layer(session_layer)
         .layer(DefaultBodyLimit::max(1024 * 1024 * 10));

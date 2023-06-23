@@ -255,7 +255,7 @@ pub async fn edit_user(
             "avatar" => {
                 let data = field.bytes().await.unwrap();
                 if !data.is_empty() {
-                    let path = "images/products_cover/".to_string() + &usr_id.to_string();
+                    let path = "images/avatar/".to_string() + &usr_id.to_string();
                     let mut file = match File::create(path).await {
                         Ok(fe) => fe,
                         Err(error) => {

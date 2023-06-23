@@ -21,7 +21,7 @@ pub struct Store {
     pub address: Option<String>,
 }
 
-#[derive(Insertable)]
+#[derive(Insertable, AsChangeset)]
 #[diesel(table_name = crate::schema::products)]
 pub struct NewProduct {
     pub store_id: Option<i32>,
