@@ -55,7 +55,7 @@ create table products
     name        varchar(100),
     description text,
     cover_id varchar(200),
-    price       numeric(10, 2),
+    price       float,
     sales       integer,
     stock       integer,
     detail_images varchar(200)
@@ -79,7 +79,7 @@ create table orders
     product_id INTEGER
         references products,
     purchase_time timestamp ,
-    total_price   numeric(10, 2),
+    total_price   float,
     quantity      integer
 );
 
