@@ -1,21 +1,26 @@
 use axum::{
-    extract::{Json, State},
+    extract::{Json, Multipart, State},
     response,
 };
 
 use axum_macros::debug_handler;
 
-use axum_sessions::extractors::WritableSession;
+use axum_sessions::extractors::{ReadableSession, WritableSession};
 
-use diesel::insert_into;
 use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool};
 use diesel::PgConnection;
+use diesel::{insert_into, update};
 use serde_json::{json, Value};
+
+use tokio::fs::File;
+use tokio::io::AsyncWriteExt;
 
 use md5;
 
-use crate::model::*;
+use crate::error_return::*;
+
+use crate::{error_return::server_error, model::*};
 
 #[debug_handler]
 pub async fn register(
@@ -204,4 +209,81 @@ pub async fn get_user_info(session: WritableSession) -> response::Json<Value> {
             "userType": session.get::<i32>("type").unwrap() //是否是商家 0不是 1 是
         }
     }))
+}
+
+pub async fn edit_user(
+    State(pool): State<Pool<ConnectionManager<PgConnection>>>,
+    session: ReadableSession,
+    mut multipart: Multipart,
+) -> response::Json<Value> {
+    use crate::schema::users::dsl::*;
+    let usr_id = match session.get::<i32>("id") {
+        Some(id) => id,
+        None => {
+            return no_login_error();
+        }
+    };
+
+    let mut edit_usr = UpdateUser::new(usr_id);
+    while let Some(field) = multipart.next_field().await.unwrap() {
+        match field.name().unwrap().to_string().as_str() {
+            "userName" => {
+                edit_usr.user_name = Some(field.text().await.unwrap().to_owned());
+            }
+            "gender" => match field.text().await.unwrap().as_str() {
+                "0" => {
+                    edit_usr.gender = Some(0);
+                }
+
+                "1" => {
+                    edit_usr.gender = Some(1);
+                }
+
+                "2" => {
+                    edit_usr.gender = Some(2);
+                }
+                _ => {
+                    return parameter_error();
+                }
+            },
+            "phone" => {
+                edit_usr.phone = Some(field.text().await.unwrap().to_owned());
+            }
+            "address" => {
+                edit_usr.address = Some(field.text().await.unwrap().to_owned());
+            }
+            "avatar" => {
+                let data = field.bytes().await.unwrap();
+                if !data.is_empty() {
+                    let path = "images/products_cover/".to_string() + &usr_id.to_string();
+                    let mut file = match File::create(path).await {
+                        Ok(fe) => fe,
+                        Err(error) => {
+                            println!("{}", error);
+                            return server_error();
+                        }
+                    };
+                    file.write_all(&data).await.expect("write error");
+                }
+            }
+            _ => {
+                return parameter_error();
+            }
+        }
+    }
+
+    let conn = &mut pool.get().unwrap();
+
+    match update(users)
+        .set(edit_usr)
+        .filter(user_id.eq(usr_id))
+        .execute(conn)
+    {
+        Ok(_) => response::Json(json!({
+            "code": 200,
+            "msg": "修改成功",
+            "data": null
+        })),
+        Err(_) => server_error(),
+    }
 }

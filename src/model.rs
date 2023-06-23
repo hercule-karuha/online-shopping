@@ -44,3 +44,25 @@ impl NewProduct {
         }
     }
 }
+
+#[derive(AsChangeset)]
+#[diesel(table_name = crate::schema::users)]
+pub struct UpdateUser {
+    pub user_id: i32,
+    pub user_name: Option<String>,
+    pub gender: Option<i32>,
+    pub phone: Option<String>,
+    pub address: Option<String>,
+}
+
+impl UpdateUser {
+    pub fn new(user_id: i32) -> Self {
+        UpdateUser {
+            user_id,
+            user_name: None,
+            gender: None,
+            phone: None,
+            address: None,
+        }
+    }
+}
