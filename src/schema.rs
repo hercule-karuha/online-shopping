@@ -6,7 +6,7 @@ diesel::table! {
         user_id -> Nullable<Int4>,
         product_id -> Nullable<Int4>,
         purchase_time -> Nullable<Timestamp>,
-        total_price -> Nullable<Numeric>,
+        total_price -> Nullable<Float8>,
         quantity -> Nullable<Int4>,
     }
 }
@@ -20,7 +20,7 @@ diesel::table! {
         description -> Nullable<Text>,
         #[max_length = 200]
         cover_id -> Nullable<Varchar>,
-        price -> Nullable<Numeric>,
+        price -> Nullable<Float8>,
         sales -> Nullable<Int4>,
         stock -> Nullable<Int4>,
         #[max_length = 200]

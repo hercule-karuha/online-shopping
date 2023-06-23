@@ -74,19 +74,19 @@ pub async fn new_store(
     update(dsl::users)
         .filter(dsl::user_id.eq(usr_id))
         .set(dsl::user_type.eq(1))
-        .execute(conn).expect("update fail");
+        .execute(conn)
+        .expect("update fail");
 
-        let path = "images/store_cover/".to_string()
-            + &s_info.as_ref().unwrap().store_id.to_string();
-        println!("{}", path);
-        let mut file = match File::create(path).await {
-            Ok(fe) => fe,
-            Err(error) => {
-                println!("{}", error);
-                return server_error();
-            }
-        };
-        file.write_all(&cover).await.expect("write error");
+    let path = "images/store_cover/".to_string() + &s_info.as_ref().unwrap().store_id.to_string();
+    println!("{}", path);
+    let mut file = match File::create(path).await {
+        Ok(fe) => fe,
+        Err(error) => {
+            println!("{}", error);
+            return server_error();
+        }
+    };
+    file.write_all(&cover).await.expect("write error");
 
     Json(json!({
         "code": 200,

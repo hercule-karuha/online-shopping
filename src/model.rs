@@ -20,3 +20,27 @@ pub struct Store {
     pub name: Option<String>,
     pub address: Option<String>,
 }
+
+#[derive(Insertable)]
+#[diesel(table_name = crate::schema::products)]
+pub struct NewProduct {
+    pub store_id: Option<i32>,
+    pub name: Option<String>,
+    pub description: Option<String>,
+    pub detail_images: Option<String>,
+    pub price: Option<f64>,
+    pub stock: Option<i32>,
+}
+
+impl NewProduct {
+    pub fn new(store_id: Option<i32>) -> Self {
+        NewProduct {
+            store_id,
+            name: None,
+            description: None,
+            detail_images: None,
+            price: None,
+            stock: None,
+        }
+    }
+}

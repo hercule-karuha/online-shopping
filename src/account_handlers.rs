@@ -105,9 +105,11 @@ pub async fn login(
     mut session: WritableSession,
     Json(payload): Json<Value>,
 ) -> response::Json<Value> {
+    use crate::schema::stores::dsl;
+    use crate::schema::stores::dsl::*;
     use crate::schema::users::dsl::*;
 
-    let name = match payload["userName"].as_str() {
+    let u_name = match payload["userName"].as_str() {
         Some(uname) => uname,
         None => {
             return response::Json(json!({
@@ -131,7 +133,7 @@ pub async fn login(
     let conn = &mut pool.get().unwrap();
 
     let user = users
-        .filter(user_name.eq(name))
+        .filter(user_name.eq(u_name))
         .select(User::as_select())
         .first(conn);
 
@@ -153,7 +155,7 @@ pub async fn login(
                     .insert("id", usr.user_id)
                     .expect("cannot store value");
                 session
-                    .insert("type", usr.user_type)
+                    .insert("type", usr.user_type.as_ref())
                     .expect("cannot store value");
                 session
                     .insert("gender", usr.gender)
@@ -162,6 +164,19 @@ pub async fn login(
                     .insert("name", usr.user_name.as_ref().unwrap())
                     .expect("cannot store value");
 
+                let mut sto_id = 0;
+
+                if usr.user_type.unwrap() == 1 {
+                    let st_id: Result<i32, diesel::result::Error> = stores
+                        .select(store_id)
+                        .filter(dsl::user_id.eq(usr.user_id))
+                        .first(conn);
+                    sto_id = st_id.unwrap();
+                    session
+                        .insert("store_id", sto_id)
+                        .expect("cannot store value");
+                }
+
                 response::Json(json!({
                     "code": 200,
                     "msg": "登陆成功",
@@ -169,7 +184,8 @@ pub async fn login(
                         "userId": usr.user_id.to_string(),
                         "userName": usr.user_name.unwrap().to_string(), //用户昵称
                         "sex": usr.gender.unwrap().to_string(), //性别
-                        "userType": usr.user_type.unwrap().to_string() //是否是商家 0不是 1 是
+                        "userType": usr.user_type.unwrap().to_string(), //是否是商家 0不是 1 是
+                        "storeId": sto_id.to_string()
                     }
                 }))
             }
