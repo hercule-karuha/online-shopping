@@ -107,6 +107,8 @@ create table shopping_carts(
         references products,
     quantity INTEGER,
     primary key (user_id,product_id)
+    phone     varchar(20),
+    address   varchar(100)
 );
 
 
