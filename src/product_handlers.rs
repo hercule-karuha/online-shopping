@@ -285,7 +285,7 @@ pub async fn get_recommend(
     let results = products
         .offset((page_no * page_sz).into())
         .limit(page_sz.into())
-        .order(product_id.asc())
+        .order(sales.asc())
         .select(Product::as_select())
         .get_results::<Product>(conn);
 
