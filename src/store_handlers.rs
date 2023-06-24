@@ -214,3 +214,88 @@ pub async fn get_store_info(
         },
     }))
 }
+
+pub async fn get_product_list(
+    State(pool): State<Pool<ConnectionManager<PgConnection>>>,
+    session: ReadableSession,
+    Json(payload): Json<Value>,
+) -> Json<Value> {
+    use crate::schema::products::dsl::*;
+    match session.get::<i32>("id") {
+        Some(id) => id,
+        None => {
+            return no_login_error();
+        }
+    };
+
+    let st_id = match payload["storeId"].as_str() {
+        Some(id) => id.parse::<i32>().unwrap(),
+        None => {
+            return parameter_error();
+        }
+    };
+    let order_type = match payload["orderType"].as_str() {
+        Some(ot) => ot.parse::<i32>().unwrap(),
+        None => {
+            return parameter_error();
+        }
+    };
+    let page_no = match payload["pageNo"].as_str() {
+        Some(pn) => pn.parse::<i32>().unwrap() - 1,
+        None => {
+            return parameter_error();
+        }
+    };
+    let page_sz = match payload["pageSize"].as_str() {
+        Some(psz) => psz.parse::<i32>().unwrap(),
+        None => {
+            return parameter_error();
+        }
+    };
+
+    let mut result_vec: Vec<Value> = Vec::new();
+
+    let conn = &mut pool.get().unwrap();
+
+    let query = products
+        .filter(store_id.eq(st_id))
+        .offset((page_no * page_sz).into())
+        .limit(page_sz.into());
+
+    let ordered_query = match order_type {
+        0 => query.order(product_id.asc()).into_boxed(),
+        1 => query.order(product_id.desc()).into_boxed(),
+        2 => query.order(sales.asc()).into_boxed(),
+        3 => query.order(sales.desc()).into_boxed(),
+        4 => query.order(price.asc()).into_boxed(),
+        5 => query.order(price.desc()).into_boxed(),
+        _ => query.into_boxed(), // 默认排序方式
+    };
+
+    let results = ordered_query
+        .select(Product::as_select())
+        .get_results::<Product>(conn);
+
+    if let Ok(resvec) = results {
+        for prod in resvec.iter() {
+            result_vec.push(json!({
+                "productId": prod.product_id.to_string(),
+                "productName": prod.name.clone().unwrap(),
+                "price": prod.price.unwrap().to_string(),
+                "sales": prod.sales.unwrap().to_string(),
+            }))
+        }
+    }
+
+    Json(json!({
+        "code": 200,
+        "msg": "请求成功",
+        "data": {
+            "pageSize": page_sz.to_string(), //一页的个数
+            "pageNo": page_no.to_string(), //页数
+            "pageCount": (result_vec.len() as i32/page_sz).to_string(), //总页数
+            "total": result_vec.len().to_string(), //总记录数
+            "list":result_vec,
+        },
+    }))
+}

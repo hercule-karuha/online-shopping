@@ -201,7 +201,7 @@ pub async fn login(
 pub async fn get_user_info(session: WritableSession) -> response::Json<Value> {
     response::Json(json!({
         "code": 200,
-        "msg": "登陆成功",
+        "msg": "请求成功",
         "data": {
             "userId": session.get::<i32>("id").unwrap(),
             "userName": session.get::<String>("name").unwrap(), //用户昵称

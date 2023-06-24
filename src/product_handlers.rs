@@ -33,6 +33,7 @@ pub async fn new_product(
     match session.get::<i32>("type") {
         Some(1) => {}
         _ => {
+            println!("wrong user_type");
             return parameter_error();
         }
     };
@@ -43,7 +44,7 @@ pub async fn new_product(
         }
     };
 
-    let mut new_prod = Product::new(Some(st_id));
+    let mut new_prod = ProductIns::new(Some(st_id));
     let mut cover: Vec<u8> = Vec::new();
     while let Some(field) = multipart.next_field().await.unwrap() {
         match field.name().unwrap().to_string().as_str() {
@@ -53,7 +54,7 @@ pub async fn new_product(
             "description" => {
                 new_prod.description = Some(field.text().await.unwrap().to_owned());
             }
-            "detail_images" => {
+            "detailImages" => {
                 new_prod.detail_images = Some(field.text().await.unwrap().to_owned());
             }
             "price" => {
@@ -79,6 +80,7 @@ pub async fn new_product(
                 new_prod.store_address = Some(field.text().await.unwrap().to_owned());
             }
             _ => {
+                println!("unknown field name");
                 return parameter_error();
             }
         }
@@ -140,7 +142,7 @@ pub async fn edit_product(
             "description" => {
                 new_prod.description = Some(field.text().await.unwrap().to_owned());
             }
-            "detail_images" => {
+            "detailImages" => {
                 new_prod.detail_images = Some(field.text().await.unwrap().to_owned());
             }
             "price" => {
@@ -181,10 +183,11 @@ pub async fn edit_product(
                     return parameter_error();
                 }
             }
-            "adderss" => {
+            "address" => {
                 new_prod.store_address = Some(field.text().await.unwrap().to_owned());
             }
-            _ => {
+            field_name => {
+                println!("unkonwn field name {}", field_name);
                 return parameter_error();
             }
         }
@@ -249,4 +252,63 @@ pub async fn get_product_info(
             "address" : prod.store_address.unwrap()
         },
     }))
+}
+
+pub async fn get_recommend(
+    State(pool): State<Pool<ConnectionManager<PgConnection>>>,
+    session: ReadableSession,
+    Json(payload): Json<Value>,
+) -> Json<Value> {
+    use crate::schema::products::dsl::*;
+    match session.get::<i32>("id") {
+        Some(id) => id,
+        None => {
+            return no_login_error();
+        }
+    };
+
+    let page_no = match payload["pageNo"].as_str() {
+        Some(pn) => pn.parse::<i32>().unwrap() - 1,
+        None => {
+            return parameter_error();
+        }
+    };
+    let page_sz = match payload["pageSize"].as_str() {
+        Some(psz) => psz.parse::<i32>().unwrap(),
+        None => {
+            return parameter_error();
+        }
+    };
+
+    let mut result_vec: Vec<Value> = Vec::new();
+    let conn = &mut pool.get().unwrap();
+    let results = products
+        .offset((page_no * page_sz).into())
+        .limit(page_sz.into())
+        .order(product_id.asc())
+        .select(Product::as_select())
+        .get_results::<Product>(conn);
+
+        if let Ok(resvec) = results {
+            for prod in resvec.iter() {
+                result_vec.push(json!({
+                    "productId": prod.product_id.to_string(),
+                    "productName": prod.name.clone().unwrap(),
+                    "price": prod.price.unwrap().to_string(),
+                    "sales": prod.sales.unwrap().to_string(),
+                }))
+            }
+        }
+    
+        Json(json!({
+            "code": 200,
+            "msg": "请求成功",
+            "data": {
+                "pageSize": page_sz.to_string(), //一页的个数
+                "pageNo": page_no.to_string(), //页数
+                "pageCount": (result_vec.len() as i32/page_sz).to_string(), //总页数
+                "total": result_vec.len().to_string(), //总记录数
+                "list":result_vec,
+            },
+        }))
 }
