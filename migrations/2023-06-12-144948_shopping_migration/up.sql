@@ -1,4 +1,4 @@
-create table users
+  create table users
 (
     user_id   serial
         primary key,
@@ -54,11 +54,12 @@ create table products
         references stores,
     name        varchar(100),
     description text,
-    cover_id varchar(200),
     price       float,
     sales       integer,
     stock       integer,
-    detail_images varchar(200)
+    detail_images varchar(200),
+    store_phone    varchar(20),
+    store_address varchar(100)
 );
 
 comment on table products is '商品表，包含各个商品的详细信息';
@@ -82,9 +83,7 @@ create table orders
     total_price   float,
     quantity      integer
     user_phone     varchar(20),
-    user_address   varchar(100),
-    store_phone    varchar(20),
-    store_address varchar(100)
+    user_address   varchar(100)
 );
 
 comment on table orders is '订单表';
