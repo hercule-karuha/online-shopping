@@ -1,12 +1,8 @@
-drop table public.orders;
-
-drop table public.shopping_carts;
-
-drop table public.products;
-
-drop table public.stores;
-
-drop table public.users;
-
-drop extension btree_gist;
-
+alter table products
+    add cover_id varchar(200);
+alter table products
+    drop column if exists store_address;
+alter table orders
+    drop column if exists user_phone;
+alter table orders
+    drop column if exists user_address;
