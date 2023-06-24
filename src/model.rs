@@ -11,7 +11,7 @@ pub struct User {
     pub user_type: Option<i32>,
 }
 
-#[derive(Queryable, Selectable)]
+#[derive(Queryable, Selectable, AsChangeset)]
 #[diesel(table_name = crate::schema::stores)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct Store {
@@ -19,6 +19,17 @@ pub struct Store {
     pub user_id: Option<i32>,
     pub name: Option<String>,
     pub address: Option<String>,
+}
+
+impl Store {
+    pub fn new(store_id: i32) -> Self {
+        Store {
+            store_id,
+            user_id: None,
+            name: None,
+            address: None,
+        }
+    }
 }
 
 #[derive(Insertable, AsChangeset, Queryable, Selectable)]
