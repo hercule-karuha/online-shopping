@@ -43,7 +43,7 @@ pub async fn new_product(
         }
     };
 
-    let mut new_prod = NewProduct::new(Some(st_id));
+    let mut new_prod = Product::new(Some(st_id));
     let mut cover: Vec<u8> = Vec::new();
     while let Some(field) = multipart.next_field().await.unwrap() {
         match field.name().unwrap().to_string().as_str() {
@@ -74,6 +74,9 @@ pub async fn new_product(
             }
             "cover" => {
                 cover = field.bytes().await.unwrap().to_vec();
+            }
+            "address" => {
+                new_prod.store_address = Some(field.text().await.unwrap().to_owned());
             }
             _ => {
                 return parameter_error();
@@ -126,7 +129,7 @@ pub async fn edit_product(
             return parameter_error();
         }
     };
-    let mut new_prod = NewProduct::new(None);
+    let mut new_prod = Product::new(None);
     let mut prod_id = 0;
 
     while let Some(field) = multipart.next_field().await.unwrap() {
@@ -178,6 +181,9 @@ pub async fn edit_product(
                     return parameter_error();
                 }
             }
+            "adderss" => {
+                new_prod.store_address = Some(field.text().await.unwrap().to_owned());
+            }
             _ => {
                 return parameter_error();
             }
@@ -206,8 +212,6 @@ pub async fn get_product_info(
     Path(id): Path<String>,
 ) -> Json<Value> {
     use crate::schema::products::dsl::*;
-    use crate::schema::stores;
-    use crate::schema::stores::dsl::*;
     match session.get::<i32>("id") {
         Some(_) => {}
         None => {
@@ -225,15 +229,10 @@ pub async fn get_product_info(
     let conn = &mut pool.get().unwrap();
 
     let prod = products
-        .select(NewProduct::as_select())
+        .select(Product::as_select())
         .filter(product_id.eq(prod_id))
         .first(conn)
         .unwrap();
-
-    let sto_address = stores
-        .select(address)
-        .filter(stores::dsl::store_id.eq(&prod.store_id.unwrap()))
-        .first::<Option<String>>(conn);
 
     Json(json!({
         "code": 200,
@@ -247,7 +246,7 @@ pub async fn get_product_info(
             "price" : prod.price.unwrap().to_string(),
             "sales" : prod.sales.unwrap().to_string(),
             "stock" : prod.stock.unwrap().to_string(),
-            "address" : sto_address.unwrap()
+            "address" : prod.store_address.unwrap()
         },
     }))
 }
