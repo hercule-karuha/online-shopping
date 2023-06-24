@@ -58,7 +58,6 @@ create table products
     sales       integer,
     stock       integer,
     detail_images varchar(200),
-    store_phone    varchar(20),
     store_address varchar(100)
 );
 
