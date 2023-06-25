@@ -12,6 +12,9 @@ diesel::table! {
         user_phone -> Nullable<Varchar>,
         #[max_length = 100]
         user_address -> Nullable<Varchar>,
+        #[max_length = 100]
+        store_address -> Nullable<Varchar>,
+        store_id -> Nullable<Int4>,
     }
 }
 
@@ -68,6 +71,7 @@ diesel::table! {
 }
 
 diesel::joinable!(orders -> products (product_id));
+diesel::joinable!(orders -> stores (store_id));
 diesel::joinable!(orders -> users (user_id));
 diesel::joinable!(products -> stores (store_id));
 diesel::joinable!(shopping_carts -> products (product_id));

@@ -111,3 +111,13 @@ impl ProductIns {
         }
     }
 }
+
+#[derive(Queryable, Selectable)]
+#[diesel(table_name = crate::schema::products)]
+#[diesel(check_for_backend(diesel::pg::Pg))]
+pub struct ProductOrderInfo {
+    pub price: Option<f64>,
+    pub store_id: Option<i32>,
+    pub store_address: Option<String>,
+}
+
