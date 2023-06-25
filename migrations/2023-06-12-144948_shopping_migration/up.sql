@@ -54,11 +54,19 @@ create table products
         references stores,
     name        varchar(100),
     description text,
+<<<<<<< HEAD
     price       float,
     sales       integer,
     stock       integer,
     detail_images varchar(200),
     store_address varchar(100)
+=======
+    cover_id varchar(200),
+    price       float,
+    sales       integer,
+    stock       integer,
+    detail_images varchar(200)
+>>>>>>> 26f09b3292b545309631648478b7eb9e6e2d1dd0
 );
 
 comment on table products is '商品表，包含各个商品的详细信息';
@@ -81,8 +89,11 @@ create table orders
     purchase_time timestamp ,
     total_price   float,
     quantity      integer
+<<<<<<< HEAD
     user_phone     varchar(20),
     user_address   varchar(100)
+=======
+>>>>>>> 26f09b3292b545309631648478b7eb9e6e2d1dd0
 );
 
 comment on table orders is '订单表';
@@ -113,4 +124,7 @@ create table shopping_carts(
 
 
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 26f09b3292b545309631648478b7eb9e6e2d1dd0
