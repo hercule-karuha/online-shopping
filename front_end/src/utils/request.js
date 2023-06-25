@@ -55,6 +55,7 @@ instance.interceptors.response.use(response => {
         return Promise.reject(responseData)
     }
 }, error => {
+    // http请求错误
     if (isLoading) {
         nProgress.done()
         isLoading = false

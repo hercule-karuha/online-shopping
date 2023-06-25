@@ -37,14 +37,16 @@
 				</div>
 			</div>
 		</main>
-		<div class="store">
-			<div class="store-cover">
-				<img src="https://pic.imgdb.cn/item/63f8d55bf144a01007fe3722.jpg" alt="">
+		<div class="store" >
+			<div class="bg">
+				<div class="store-cover">
+					<img src="https://pic.imgdb.cn/item/63f8d55bf144a01007fe3722.jpg" alt="">
+				</div>
+				<div class="store-info">
+					{{ productInfo.storeName }}
+				</div>
+				<button>进店逛逛</button>
 			</div>
-			<div class="store-info">
-				{{ productInfo.storeName }}
-			</div>
-			<button>进店逛逛</button>
 		</div>
 		<div class="detail">
 			<el-tabs v-model="activeName" class="demo-tabs" @tab-click="handleClick">
@@ -98,7 +100,7 @@ const num = ref(1)
 .content {
 	margin: 0 auto;
 	width: var(--global-width);
-	padding-top: 80px;
+	padding-top: 40px;
 
 	main {
 		display: flex;
@@ -192,43 +194,75 @@ const num = ref(1)
 
 	.store {
 		margin-top: 30px;
-		background-color: white;
-		padding: 20px;
 		border-radius: 20px;
-		display: flex;
-
-		.store-cover {
-			height: 100px;
-			width: 100px;
-
-			img {
+		background-size: cover;
+		overflow: hidden;
+		background-image: url('https://pic.imgdb.cn/item/63f8d55bf144a01007fe3722.jpg');
+		.bg {
+			padding: 20px;
+			display: flex;
+			backdrop-filter: blur(5px);
+			position: relative;
+			&::after {
+				content: '';
+				position: absolute;
+				background-image: linear-gradient(to right , transparent 0%, #ffffff 50%);
 				height: 100%;
 				width: 100%;
-				object-fit: cover;
-				border-radius: 10px;
+				top: 0;
+				left: 0;
+				z-index: -1;
 			}
-		}
+			.store-cover {
+				height: 100px;
+				width: 100px;
+				
+				img {
+					height: 100%;
+					width: 100%;
+					object-fit: cover;
+					border-radius: 10px;
+				}
+			}
 
-		.store-info {
-			margin-left: 30px;
-			font-size: 30px;
-			display: flex;
-			align-items: center;
-			letter-spacing: 10px;
-		}
+			.store-info {
+				margin-left: 30px;
+				font-size: 30px;
+				display: flex;
+				align-items: center;
+				letter-spacing: 10px;
+				position: relative;
+				// cursor: none;
+				&::after {
+					transition: all 0.3s ease;
+					content: '';
+					position: absolute;
+					background-color: var(--main-color-purple);
+					height: 3px;
+					width: 0;
+					bottom: 20px;
+					left: -4px;
+				}
+				&:hover {
+					&::after {
+						width: 100%;
+					}
+				}
+			}
 
-		button {
-			margin-left: auto;
-			width: 150px;
-			background-color: var(--main-color-purple);
-			border-radius: 10px;
-			border: none;
-			font-size: 20px;
-			color: white;
-			cursor: pointer;
+			button {
+				margin-left: auto;
+				width: 150px;
+				background-color: var(--main-color-purple);
+				border-radius: 10px;
+				border: none;
+				font-size: 20px;
+				color: white;
+				cursor: pointer;
 
-			&:hover {
-				background-color: var(--main-color-purple-hover);
+				&:hover {
+					background-color: var(--main-color-purple-hover);
+				}
 			}
 		}
 	}
@@ -244,12 +278,11 @@ const num = ref(1)
 		}
 
 		.detail-images {
-			margin-top: 20px;
-
+			margin: 20px;
 			.detail-image {
 				margin-bottom: 20px;
-
 				img {
+					width: 100%;
 					object-fit: cover;
 				}
 			}
