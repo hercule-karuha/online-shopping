@@ -54,6 +54,7 @@ async fn main() {
         .route("/api/store/editStore", post(edit_store))
         .route("/api/store/getStoreProductList", post(get_product_list))
         .route("/api/purchase/addShoppingCart", post(add_shopping_cart))
+        .route("/api/purchase/immediatePurchase", post(immediate_purchase))
         .with_state(pool)
         .layer(session_layer)
         .layer(DefaultBodyLimit::max(1024 * 1024 * 10));
