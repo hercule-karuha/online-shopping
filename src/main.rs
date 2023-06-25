@@ -14,6 +14,7 @@ use std::env;
 use account_handlers::*;
 use file_handlers::*;
 use product_handlers::*;
+use purchase_handlers::*;
 use store_handlers::*;
 
 pub mod account_handlers;
@@ -21,6 +22,7 @@ pub mod error_return;
 pub mod file_handlers;
 pub mod model;
 pub mod product_handlers;
+pub mod purchase_handlers;
 pub mod schema;
 pub mod store_handlers;
 
@@ -51,6 +53,7 @@ async fn main() {
         .route("/api/product/getProduct/:id", get(get_product_info))
         .route("/api/store/editStore", post(edit_store))
         .route("/api/store/getStoreProductList", post(get_product_list))
+        .route("/api/purchase/addShoppingCart", post(add_shopping_cart))
         .with_state(pool)
         .layer(session_layer)
         .layer(DefaultBodyLimit::max(1024 * 1024 * 10));
