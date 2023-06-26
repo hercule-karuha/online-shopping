@@ -1,5 +1,5 @@
 use diesel::prelude::*;
-
+use serde::{Deserialize};
 #[derive(Queryable, Selectable)]
 #[diesel(table_name = crate::schema::users)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
@@ -121,3 +121,20 @@ pub struct ProductOrderInfo {
     pub store_address: Option<String>,
 }
 
+#[derive(Debug, Deserialize)]
+pub struct ProductInfo {
+    pub productId: String,
+    pub num: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct PurRequestData {
+    pub address: String,
+    pub phone: String,
+    pub list: Vec<ProductInfo>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct CartRequestData{
+    pub list: Vec<ProductInfo>,
+}

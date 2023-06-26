@@ -3,13 +3,15 @@ use axum::{
     response,
 };
 
+use std::time::SystemTime;
+
 use axum_sessions::extractors::ReadableSession;
 
 use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool};
 use diesel::PgConnection;
 use diesel::{insert_into, update};
-use serde_json::{json, Value};
+use serde_json::{from_value, json, Value};
 
 use crate::model::*;
 
@@ -28,21 +30,38 @@ pub async fn add_shopping_cart(
         }
     };
 
-    let prod_list_js: Vec<&Value> = match &payload["list"] {
-        Value::Array(ls) => ls.iter().collect(),
-        _ => {
-            return parameter_error();
+    let request_data: CartRequestData = match from_value(payload) {
+        Ok(data) => data,
+        Err(error) => {
+            eprintln!("Failed to parse JSON: {}", error);
+            return response::Json(json!({
+                "code": 400,
+                "message": "Invalid JSON format"
+            }));
         }
     };
 
     let conn = &mut pool.get().unwrap();
 
-    for prod in prod_list_js.iter() {
+    for prod in request_data.list.iter() {
+        let prod_id = match prod.productId.parse::<i32>() {
+            Ok(id) => id,
+            Err(_) => {
+                return parameter_error();
+            }
+        };
+
+        let num: i32 = match prod.num.parse::<i32>() {
+            Ok(n) => n,
+            Err(_) => {
+                return parameter_error();
+            }
+        };
         match insert_into(shopping_carts)
             .values((
-                product_id.eq(prod["productId"].to_string().parse::<i32>().unwrap()),
+                product_id.eq(prod_id),
                 user_id.eq(usr_id),
-                quantity.eq(prod["num"].to_string().parse::<i32>().unwrap()),
+                quantity.eq(num),
             ))
             .execute(conn)
         {
@@ -68,6 +87,8 @@ pub async fn immediate_purchase(
     use crate::schema::orders::dsl::*;
     use crate::schema::products::dsl;
 
+    println!("purchase something");
+
     let usr_id = match session.get::<i32>("id") {
         Some(id) => id,
         None => {
@@ -75,40 +96,34 @@ pub async fn immediate_purchase(
         }
     };
 
-    let usr_phone = match payload["phone"].as_str() {
-        Some(pho) => pho,
-        _ => {
-            return parameter_error();
+    let request_data: PurRequestData = match from_value(payload) {
+        Ok(data) => data,
+        Err(error) => {
+            eprintln!("Failed to parse JSON: {}", error);
+            return response::Json(json!({
+                "code": 400,
+                "message": "Invalid JSON format"
+            }));
         }
     };
 
-    let usr_address = match payload["phone"].as_str() {
-        Some(addr) => addr,
-        _ => {
-            return parameter_error();
-        }
-    };
-
-    let prod_list_js: Vec<&Value> = match &payload["list"] {
-        Value::Array(ls) => ls.iter().collect(),
-        _ => {
-            return parameter_error();
-        }
-    };
+    let usr_address = request_data.address;
+    let usr_phone = request_data.phone;
+    let list = request_data.list;
 
     let conn = &mut pool.get().unwrap();
 
-    for prod in prod_list_js.iter() {
-        let prod_id = match &prod["productId"].as_str() {
-            Some(id) => id.to_string().parse::<i32>().unwrap(),
-            _ => {
+    for prod in list.iter() {
+        let prod_id = match prod.productId.parse::<i32>() {
+            Ok(id) => id,
+            Err(_) => {
                 return parameter_error();
             }
         };
 
-        let num = match &prod["num"].as_str() {
-            Some(n) => n.to_string().parse::<i32>().unwrap(),
-            _ => {
+        let num = match prod.num.parse::<i32>() {
+            Ok(n) => n,
+            Err(_) => {
                 return parameter_error();
             }
         };
@@ -119,18 +134,20 @@ pub async fn immediate_purchase(
                 dsl::sales.eq(dsl::sales + num),
             ))
             .returning((dsl::price, dsl::store_id, dsl::store_address))
-            .get_result::<ProductOrderInfo>(conn).unwrap();
+            .get_result::<ProductOrderInfo>(conn)
+            .unwrap();
 
         match insert_into(orders)
             .values((
                 user_id.eq(usr_id),
                 product_id.eq(prod_id),
-                total_price.eq(prod_info.price.unwrap()*(num as f64)),
+                purchase_time.eq(SystemTime::now()),
+                total_price.eq(prod_info.price.unwrap() * (num as f64)),
                 quantity.eq(num),
-                user_phone.eq(usr_phone),
-                user_address.eq(usr_address),
+                user_phone.eq(usr_phone.as_str()),
+                user_address.eq(usr_address.as_str()),
                 store_address.eq(prod_info.store_address.unwrap()),
-                store_id.eq(prod_info.store_id.unwrap())
+                store_id.eq(prod_info.store_id.unwrap()),
             ))
             .execute(conn)
         {
