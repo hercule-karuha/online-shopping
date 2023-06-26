@@ -11,7 +11,7 @@ use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool};
 use diesel::PgConnection;
 use diesel::{insert_into, update};
-use serde_json::{json, Value};
+use serde_json::{from_value, json, Value};
 
 use tokio::fs::File;
 use tokio::io::AsyncWriteExt;
@@ -20,7 +20,7 @@ use md5;
 
 use crate::error_return::*;
 
-use crate::{error_return::server_error, model::*};
+use crate::model::*;
 
 #[debug_handler]
 pub async fn register(
@@ -287,3 +287,141 @@ pub async fn edit_user(
         Err(_) => server_error(),
     }
 }
+
+pub async fn get_shopping_cart(
+    State(pool): State<Pool<ConnectionManager<PgConnection>>>,
+    session: ReadableSession,
+    Json(payload): Json<Value>,
+) -> response::Json<Value> {
+    use crate::schema::products::dsl;
+    use crate::schema::shopping_carts::dsl::*;
+
+    let usr_id = match session.get::<i32>("id") {
+        Some(id) => id,
+        None => {
+            return no_login_error();
+        }
+    };
+
+    let request_data: PageInfo = match from_value(payload) {
+        Ok(data) => data,
+        Err(error) => {
+            eprintln!("Failed to parse JSON: {}", error);
+            return response::Json(json!({
+                "code": 400,
+                "message": "Invalid JSON format"
+            }));
+        }
+    };
+
+    let p_size = match request_data.pageSize.parse::<i32>() {
+        Ok(sz) => sz,
+        Err(_) => {
+            return parameter_error();
+        }
+    };
+
+    let p_no = match request_data.pagepageNo.parse::<i32>() {
+        Ok(sz) => sz,
+        Err(_) => {
+            return parameter_error();
+        }
+    };
+
+    let conn = &mut pool.get().unwrap();
+
+    let carts = match shopping_carts
+        .select(CartInfo::as_select())
+        .offset((p_size * (p_no - 1)) as i64)
+        .limit(p_size.into())
+        .filter(user_id.eq(usr_id))
+        .get_results(conn)
+    {
+        Ok(rev_vec) => rev_vec,
+        Err(_) => {
+            return server_error();
+        }
+    };
+
+    let mut resvec: Vec<Value> = Vec::new();
+
+    for cart_info in carts.iter() {
+        match dsl::products
+            .select((dsl::name, dsl::price))
+            .filter(dsl::product_id.eq(cart_info.product_id))
+            .first::<(Option<String>, Option<f64>)>(conn)
+        {
+            Ok((prod_name, prod_price)) => resvec.push(json!({
+                "productId":cart_info.product_id.to_string(),
+                "productName":prod_name,
+                "price":prod_price.unwrap().to_string(),
+                "num":cart_info.quantity.unwrap().to_string(),
+            })),
+            Err(_) => {
+                return server_error();
+            }
+        };
+    }
+
+    response::Json(json!({
+        "code": 200,
+        "msg": "修改成功",
+        "data": resvec
+    }))
+}
+
+// pub async fn get_order_list(
+//     State(pool): State<Pool<ConnectionManager<PgConnection>>>,
+//     session: ReadableSession,
+//     Json(payload): Json<Value>,
+// ) -> response::Json<Value> {
+//     use crate::schema::orders::dsl::*;
+
+//     let mut resvec: Vec<Value> = Vec::new();
+
+//     let request_data: PageInfo = match from_value(payload) {
+//         Ok(data) => data,
+//         Err(error) => {
+//             eprintln!("Failed to parse JSON: {}", error);
+//             return response::Json(json!({
+//                 "code": 400,
+//                 "message": "Invalid JSON format"
+//             }));
+//         }
+//     };
+
+//     let p_size = match request_data.pageSize.parse::<i32>() {
+//         Ok(sz) => sz,
+//         Err(_) => {
+//             return parameter_error();
+//         }
+//     };
+
+//     let p_no = match request_data.pagepageNo.parse::<i32>() {
+//         Ok(sz) => sz,
+//         Err(_) => {
+//             return parameter_error();
+//         }
+//     };
+
+//     let conn = &mut pool.get().unwrap();
+
+//     let usr_orders = match =orders
+//     .select()
+//     .offset((p_size * (p_no - 1)) as i64)
+//     .limit(p_size.into())
+//     .filter(user_id.eq(usr_id))
+//     .get_results(conn)
+// {
+//     Ok(rev_vec) => rev_vec,
+//     Err(_) => {
+//         return server_error();
+//     }
+// };
+
+//     response::Json(json!({
+//         "code": 200,
+//         "msg": "修改成功",
+//         "data": resvec
+//     }))
+// }

@@ -1,5 +1,5 @@
 use diesel::prelude::*;
-use serde::{Deserialize};
+use serde::Deserialize;
 #[derive(Queryable, Selectable)]
 #[diesel(table_name = crate::schema::users)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
@@ -84,7 +84,7 @@ impl Product {
     }
 }
 
-#[derive(Insertable,AsChangeset, Queryable, Selectable)]
+#[derive(Insertable, AsChangeset, Queryable, Selectable)]
 #[diesel(table_name = crate::schema::products)]
 pub struct ProductIns {
     pub store_id: Option<i32>,
@@ -119,7 +119,25 @@ pub struct ProductOrderInfo {
     pub price: Option<f64>,
     pub store_id: Option<i32>,
     pub store_address: Option<String>,
+    pub name: Option<String>,
 }
+#[derive(Queryable, Selectable)]
+#[diesel(table_name = crate::schema::shopping_carts)]
+pub struct CartInfo {
+    pub user_id: i32,
+    pub product_id: i32,
+    pub quantity: Option<i32>,
+}
+
+#[derive(Queryable, Selectable)]
+#[diesel(table_name = crate::schema::shopping_carts)]
+pub struct SimpleOrderInfo {
+    pub user_id: i32,
+    pub product_id: i32,
+    pub quantity: Option<i32>,
+}
+
+
 
 #[derive(Debug, Deserialize)]
 #[allow(warnings)]
@@ -136,6 +154,13 @@ pub struct PurRequestData {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct CartRequestData{
+pub struct CartRequestData {
     pub list: Vec<ProductInfo>,
+}
+
+#[derive(Debug, Deserialize)]
+#[allow(warnings)]
+pub struct PageInfo {
+    pub pageSize: String,
+    pub pagepageNo: String,
 }

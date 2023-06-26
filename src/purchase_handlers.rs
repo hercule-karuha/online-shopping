@@ -129,7 +129,7 @@ pub async fn immediate_purchase(
                 dsl::stock.eq(dsl::stock - num),
                 dsl::sales.eq(dsl::sales + num),
             ))
-            .returning((dsl::price, dsl::store_id, dsl::store_address))
+            .returning((dsl::price, dsl::store_id, dsl::store_address, dsl::name))
             .get_result::<ProductOrderInfo>(conn)
             .unwrap();
 
@@ -215,7 +215,10 @@ pub async fn edit_shopping_cart(
                 };
             }
             _ => {
-                match update(shopping_carts.filter(user_id.eq(usr_id).and(product_id.eq(prod_id)))).set(quantity.eq(num)).execute(conn) {
+                match update(shopping_carts.filter(user_id.eq(usr_id).and(product_id.eq(prod_id))))
+                    .set(quantity.eq(num))
+                    .execute(conn)
+                {
                     Ok(_) => {}
                     Err(_) => {
                         return server_error();
