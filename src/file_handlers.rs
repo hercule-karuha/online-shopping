@@ -70,9 +70,7 @@ pub async fn upload_image(session: ReadableSession, mut multipart: Multipart) ->
     }))
 }
 
-pub async fn get_image(
-    Path(image_path): Path<String>,
-) -> Response<Full<Bytes>> {
+pub async fn get_image(Path(image_path): Path<String>) -> Response<Full<Bytes>> {
     let mut f = match File::open(image_path).await {
         Ok(fe) => fe,
         Err(_) => {
