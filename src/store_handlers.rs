@@ -1,6 +1,6 @@
 use axum::{
-    extract::{Multipart, Path, State},
-    response::Json,
+    extract::{Json, Multipart, Path, State},
+    response,
 };
 
 use axum_sessions::extractors::ReadableSession;
@@ -9,7 +9,7 @@ use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool};
 use diesel::PgConnection;
 use diesel::{insert_into, update};
-use serde_json::{json, Value};
+use serde_json::{from_value, json, Value};
 
 use tokio::fs::File;
 use tokio::io::AsyncWriteExt;
@@ -297,5 +297,94 @@ pub async fn get_product_list(
             "total": result_vec.len().to_string(), //总记录数
             "list":result_vec,
         },
+    }))
+}
+
+pub async fn get_sale_order(
+    State(pool): State<Pool<ConnectionManager<PgConnection>>>,
+    session: ReadableSession,
+    Json(payload): Json<Value>,
+) -> response::Json<Value> {
+    use crate::schema::orders::dsl::*;
+    match session.get::<i32>("id") {
+        Some(id) => id,
+        None => {
+            return no_login_error();
+        }
+    };
+
+    match session.get::<i32>("type") {
+        Some(1) => {}
+        _ => {
+            println!("wrong user_type");
+            return parameter_error();
+        }
+    };
+    let st_id = match session.get::<i32>("store_id") {
+        Some(s_id) => s_id,
+        _ => {
+            return server_error();
+        }
+    };
+    let mut resvec: Vec<Value> = Vec::new();
+
+    let request_data: PageInfo = match from_value(payload) {
+        Ok(data) => data,
+        Err(error) => {
+            eprintln!("Failed to parse JSON: {}", error);
+            return response::Json(json!({
+                "code": 400,
+                "message": "Invalid JSON format"
+            }));
+        }
+    };
+
+    let p_size = match request_data.pageSize.parse::<i32>() {
+        Ok(sz) => sz,
+        Err(_) => {
+            return parameter_error();
+        }
+    };
+
+    let p_no = match request_data.pageNo.parse::<i32>() {
+        Ok(sz) => sz,
+        Err(_) => {
+            return parameter_error();
+        }
+    };
+
+    let conn = &mut pool.get().unwrap();
+
+    let usr_orders = match orders
+        .select(OrderInfo::as_select())
+        .offset((p_size * (p_no - 1)) as i64)
+        .limit(p_size.into())
+        .filter(store_id.eq(st_id))
+        .get_results(conn)
+    {
+        Ok(rev_vec) => rev_vec,
+        Err(_) => {
+            return server_error();
+        }
+    };
+
+    for u_order in usr_orders.iter() {
+        resvec.push(json!({
+            "orderId":u_order.order_id.to_string(),
+            "productId":u_order.product_id.unwrap().to_string(),
+            "productName":u_order.product_name.clone().unwrap(),
+            "price":u_order.total_price.unwrap().to_string(),
+            "num":u_order.quantity.unwrap().to_string(),
+            "time":u_order.purchase_time.unwrap().to_string(),
+            "sendAddress":u_order.store_address.clone().unwrap(),
+            "receiveAddress":u_order.user_address.clone().unwrap(),
+            "phone":u_order.user_phone.clone().unwrap(),
+        }))
+    }
+
+    response::Json(json!({
+        "code": 200,
+        "msg": "请求成功",
+        "data": resvec
     }))
 }

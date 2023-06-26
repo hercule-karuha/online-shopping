@@ -321,7 +321,7 @@ pub async fn get_shopping_cart(
         }
     };
 
-    let p_no = match request_data.pagepageNo.parse::<i32>() {
+    let p_no = match request_data.pageNo.parse::<i32>() {
         Ok(sz) => sz,
         Err(_) => {
             return parameter_error();
@@ -404,7 +404,7 @@ pub async fn get_order_list(
         }
     };
 
-    let p_no = match request_data.pagepageNo.parse::<i32>() {
+    let p_no = match request_data.pageNo.parse::<i32>() {
         Ok(sz) => sz,
         Err(_) => {
             return parameter_error();
@@ -429,18 +429,20 @@ pub async fn get_order_list(
     for u_order in usr_orders.iter() {
         resvec.push(json!({
             "orderId":u_order.order_id.to_string(),
-            "storeId":u_order.store_id.unwrap().to_string(),
             "productId":u_order.product_id.unwrap().to_string(),
             "productName":u_order.product_name.clone().unwrap(),
             "price":u_order.total_price.unwrap().to_string(),
             "num":u_order.quantity.unwrap().to_string(),
             "time":u_order.purchase_time.unwrap().to_string(),
+            "sendAddress":u_order.store_address.clone().unwrap(),
+            "receiveAddress":u_order.user_address.clone().unwrap(),
+            "phone":u_order.user_phone.clone().unwrap(),
         }))
     }
 
     response::Json(json!({
         "code": 200,
-        "msg": "修改成功",
+        "msg": "请求成功",
         "data": resvec
     }))
 }

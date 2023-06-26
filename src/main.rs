@@ -16,6 +16,7 @@ use file_handlers::*;
 use product_handlers::*;
 use purchase_handlers::*;
 use store_handlers::*;
+use search_handlers::*;
 
 pub mod account_handlers;
 pub mod error_return;
@@ -25,6 +26,7 @@ pub mod product_handlers;
 pub mod purchase_handlers;
 pub mod schema;
 pub mod store_handlers;
+pub mod search_handlers;
 
 #[tokio::main]
 async fn main() {
@@ -59,6 +61,8 @@ async fn main() {
         .route("/api/user/getShoppingCart", post(get_shopping_cart))
         .route("/api/user/getOrderList", post(get_order_list))
         .route("/api/user/getDetailOrder", post(get_order_detail))
+        .route("/api/seach/searchProduct", post(search_product))
+        .route("/api/store/getOrders", post(get_sale_order))
         .with_state(pool)
         .layer(session_layer)
         .layer(DefaultBodyLimit::max(1024 * 1024 * 10));
