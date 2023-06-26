@@ -15,6 +15,8 @@ diesel::table! {
         #[max_length = 100]
         store_address -> Nullable<Varchar>,
         store_id -> Nullable<Int4>,
+        #[max_length = 100]
+        product_name -> Nullable<Varchar>,
     }
 }
 

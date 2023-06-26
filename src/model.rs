@@ -1,5 +1,6 @@
 use diesel::prelude::*;
 use serde::Deserialize;
+use chrono::NaiveDateTime;
 #[derive(Queryable, Selectable)]
 #[diesel(table_name = crate::schema::users)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
@@ -129,14 +130,21 @@ pub struct CartInfo {
     pub quantity: Option<i32>,
 }
 
-#[derive(Queryable, Selectable)]
-#[diesel(table_name = crate::schema::shopping_carts)]
-pub struct SimpleOrderInfo {
-    pub user_id: i32,
-    pub product_id: i32,
-    pub quantity: Option<i32>,
-}
 
+
+#[derive(Queryable, Selectable)]
+#[diesel(table_name = crate::schema::orders)]
+pub struct OrderInfo {
+    pub order_id:i32,
+    pub store_id:Option<i32>,
+    pub product_id: Option<i32>,
+    pub product_name:Option<String>,
+    pub quantity: Option<i32>,
+    pub total_price:Option<f64>,
+    pub store_address:Option<String>,
+    pub user_address:Option<String>,
+    pub purchase_time:Option<NaiveDateTime>,
+}
 
 
 #[derive(Debug, Deserialize)]

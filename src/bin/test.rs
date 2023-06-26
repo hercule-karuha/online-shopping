@@ -1,7 +1,6 @@
-use md5;
-use std::time::{SystemTime};
+use chrono::Local;
+
 fn main() {
-    let digest = md5::compute("1234567890");
-    let md5ps = format!("{:x}", digest).to_uppercase();
-    println!("{},{:?}", md5ps,SystemTime::now());
+    let current_time = Local::now();
+    println!("Current time: {}", current_time);
 }

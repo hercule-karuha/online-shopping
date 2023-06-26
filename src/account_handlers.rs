@@ -370,58 +370,134 @@ pub async fn get_shopping_cart(
     }))
 }
 
-// pub async fn get_order_list(
-//     State(pool): State<Pool<ConnectionManager<PgConnection>>>,
-//     session: ReadableSession,
-//     Json(payload): Json<Value>,
-// ) -> response::Json<Value> {
-//     use crate::schema::orders::dsl::*;
+pub async fn get_order_list(
+    State(pool): State<Pool<ConnectionManager<PgConnection>>>,
+    session: ReadableSession,
+    Json(payload): Json<Value>,
+) -> response::Json<Value> {
+    use crate::schema::orders::dsl::*;
 
-//     let mut resvec: Vec<Value> = Vec::new();
+    let usr_id = match session.get::<i32>("id") {
+        Some(id) => id,
+        None => {
+            return no_login_error();
+        }
+    };
 
-//     let request_data: PageInfo = match from_value(payload) {
-//         Ok(data) => data,
-//         Err(error) => {
-//             eprintln!("Failed to parse JSON: {}", error);
-//             return response::Json(json!({
-//                 "code": 400,
-//                 "message": "Invalid JSON format"
-//             }));
-//         }
-//     };
+    let mut resvec: Vec<Value> = Vec::new();
 
-//     let p_size = match request_data.pageSize.parse::<i32>() {
-//         Ok(sz) => sz,
-//         Err(_) => {
-//             return parameter_error();
-//         }
-//     };
+    let request_data: PageInfo = match from_value(payload) {
+        Ok(data) => data,
+        Err(error) => {
+            eprintln!("Failed to parse JSON: {}", error);
+            return response::Json(json!({
+                "code": 400,
+                "message": "Invalid JSON format"
+            }));
+        }
+    };
 
-//     let p_no = match request_data.pagepageNo.parse::<i32>() {
-//         Ok(sz) => sz,
-//         Err(_) => {
-//             return parameter_error();
-//         }
-//     };
+    let p_size = match request_data.pageSize.parse::<i32>() {
+        Ok(sz) => sz,
+        Err(_) => {
+            return parameter_error();
+        }
+    };
 
-//     let conn = &mut pool.get().unwrap();
+    let p_no = match request_data.pagepageNo.parse::<i32>() {
+        Ok(sz) => sz,
+        Err(_) => {
+            return parameter_error();
+        }
+    };
 
-//     let usr_orders = match =orders
-//     .select()
-//     .offset((p_size * (p_no - 1)) as i64)
-//     .limit(p_size.into())
-//     .filter(user_id.eq(usr_id))
-//     .get_results(conn)
-// {
-//     Ok(rev_vec) => rev_vec,
-//     Err(_) => {
-//         return server_error();
-//     }
-// };
+    let conn = &mut pool.get().unwrap();
 
-//     response::Json(json!({
-//         "code": 200,
-//         "msg": "修改成功",
-//         "data": resvec
-//     }))
-// }
+    let usr_orders = match orders
+        .select(OrderInfo::as_select())
+        .offset((p_size * (p_no - 1)) as i64)
+        .limit(p_size.into())
+        .filter(user_id.eq(usr_id))
+        .get_results(conn)
+    {
+        Ok(rev_vec) => rev_vec,
+        Err(_) => {
+            return server_error();
+        }
+    };
+
+    for u_order in usr_orders.iter() {
+        resvec.push(json!({
+            "orderId":u_order.order_id.to_string(),
+            "storeId":u_order.store_id.unwrap().to_string(),
+            "productId":u_order.product_id.unwrap().to_string(),
+            "productName":u_order.product_name.clone().unwrap(),
+            "price":u_order.total_price.unwrap().to_string(),
+            "num":u_order.quantity.unwrap().to_string(),
+            "time":u_order.purchase_time.unwrap().to_string(),
+        }))
+    }
+
+    response::Json(json!({
+        "code": 200,
+        "msg": "修改成功",
+        "data": resvec
+    }))
+}
+
+pub async fn get_order_detail(
+    State(pool): State<Pool<ConnectionManager<PgConnection>>>,
+    session: ReadableSession,
+    Json(payload): Json<Value>,
+) -> response::Json<Value> {
+    use crate::schema::orders::dsl::*;
+    match session.get::<i32>("id") {
+        Some(id) => id,
+        None => {
+            return no_login_error();
+        }
+    };
+
+    let conn = &mut pool.get().unwrap();
+
+    let oid_str = match payload["orderId"].as_str() {
+        Some(id) => id.to_owned(),
+        None => {
+            return parameter_error();
+        }
+    };
+
+    let oid = match oid_str.parse::<i32>() {
+        Ok(id) => id,
+        Err(_) => {
+            return parameter_error();
+        }
+    };
+
+    let u_order = match orders
+        .select(OrderInfo::as_select())
+        .filter(order_id.eq(oid))
+        .first(conn)
+    {
+        Ok(res) => res,
+        Err(_) => {
+            return server_error();
+        }
+    };
+
+    response::Json(json!({
+        "code": 200,
+        "msg": "修改成功",
+        "data":{
+            "orderId":u_order.order_id.to_string(),
+            "storeId":u_order.store_id.unwrap().to_string(),
+            "productId":u_order.product_id.unwrap().to_string(),
+            "productName":u_order.product_name.clone().unwrap(),
+            "price":u_order.total_price.unwrap().to_string(),
+            "num":u_order.quantity.unwrap().to_string(),
+            "sendAddress":u_order.store_address.clone().unwrap(),
+            "receiveAddress":u_order.user_address.clone().unwrap(),
+            "time":u_order.purchase_time.unwrap().to_string(),
+        }
+    }))
+}

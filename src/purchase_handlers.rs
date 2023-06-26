@@ -3,9 +3,8 @@ use axum::{
     response,
 };
 
-use std::time::SystemTime;
-
 use axum_sessions::extractors::ReadableSession;
+use chrono::Local;
 
 use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool};
@@ -137,7 +136,8 @@ pub async fn immediate_purchase(
             .values((
                 user_id.eq(usr_id),
                 product_id.eq(prod_id),
-                purchase_time.eq(SystemTime::now()),
+                purchase_time.eq(Local::now().naive_local()),
+                product_name.eq(prod_info.name.unwrap()),
                 total_price.eq(prod_info.price.unwrap() * (num as f64)),
                 quantity.eq(num),
                 user_phone.eq(usr_phone.as_str()),
