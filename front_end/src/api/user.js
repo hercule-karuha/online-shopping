@@ -2,7 +2,7 @@ import request from '@/utils/request'
 
 export const login = (data) => {
     return request({
-        url: '/login',
+        url: '/user/login',
         method: 'post',
         data
     })
@@ -10,7 +10,7 @@ export const login = (data) => {
 
 export const register = (data) => {
     return request({
-        url: '/register',
+        url: '/user/register',
         method: 'post',
         data
     })
@@ -18,7 +18,7 @@ export const register = (data) => {
 
 export const getUserInfo = (params) => {
     return request({
-        url: '/userInfo',
+        url: '/user/userInfo',
         method: 'get',
         params
     })
