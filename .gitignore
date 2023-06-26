@@ -1,6 +1,10 @@
 /target
+<<<<<<< HEAD
 /images/avatar/*
 /images/store_cover/*
 /images/products_cover/*
 /images/products/*
 
+=======
+/images/*
+>>>>>>> d0f4cafa92bc554f6adb4377e9f19a4b507722e5
