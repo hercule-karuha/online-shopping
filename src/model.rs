@@ -122,6 +122,7 @@ pub struct ProductOrderInfo {
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(warnings)]
 pub struct ProductInfo {
     pub productId: String,
     pub num: String,
