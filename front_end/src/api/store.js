@@ -19,9 +19,16 @@ export const getStoreInfo = (id) => {
         method: 'get'
     })
 }
-export const getStoreProductlist = (data) => {
+export const getStoreProductList = (data) => {
     return request({
-        url: '/store/getStoreProductlist',
+        url: '/store/getStoreProductList',
+        method: 'post',
+        data
+    })
+}
+export const getOrders = (data) => {
+    return request({
+        url: '/store/getOrders',
         method: 'post',
         data
     })

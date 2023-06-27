@@ -21,8 +21,10 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
 }
 
 app.config.globalProperties.globalInfo = {
-    avatarUrl: '/api/file/getAvatar',
-    uploadUrl: '/api/file/getImage',
+    avatarUrl: '/api/file/getAvatar/',
+    imgUrl: '/api/file/getImage/',
+    storeCoverUrl: '/api/file/getStoreCover/',
+    productCoverUrl: '/api/file/getProductCover/',
     maxFileSize: 1024 * 1024 * 10
 }
 // app.config.globalProperties.$getUserInfo = getUserInfo

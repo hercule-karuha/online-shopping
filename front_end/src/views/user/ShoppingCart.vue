@@ -6,14 +6,14 @@
             </div>
             <div class="info">
                 <span>已选商品({{ 0 }})</span>
-                <span class="price">{{ "20.00" }}</span>
-                <button>结 算</button>
+                <span class="price">{{ totalPrice.toFixed(2) }}</span>
+                <button @click="purchase">结 算</button>
             </div>
         </header>
         <div class="content">
             <DataList :data-source="dataSource" :flex="false">
                 <template #default="{ data }">
-                    <ShoppingCartItem :data="data" />
+                    <ShoppingCartItem :data="data" @delete="delItem" />
                 </template>
             </DataList>
         </div>
@@ -22,74 +22,75 @@
 
 <script setup>
 import DataList from '@/components/DataList.vue'
-import ShoppingCartItem from '@/components/ShoppingCartItem.vue'
-const dataSource = {
-    pageSize: 10,
-    pageNo: 1,
-    pageCount: 2,
-    total: 20,
-    list: [
-        {
-            storeId: 1,
-            name: '小米旗舰店',
-            products: [
-                {
-                    productId: 1,
-                    cover: 'https://pic.imgdb.cn/item/64475b180d2dde5777857756.webp',
-                    name: 'XXxxxxxxxxxxxxXXXXXXXXXXX',
-                    num: 2,
-                    price: 100,
-                },
-                {
-                    productId: 2,
-                    cover: 'https://pic.imgdb.cn/item/64475aff0d2dde5777855968.jpg',
-                    name: 'XXxxxxxxxxxxxxX手机---sXXXXXXXXXXX',
-                    num: 8,
-                    price: 100,
-                }
-            ]
-        },
-        {
-            storeId: 2,
-            name: '小华旗舰店',
-            products: [
-                {
-                    productId: 2,
-                    cover: 'https://pic.imgdb.cn/item/64475aff0d2dde5777855968.jpg',
-                    name: 'XXxxxxxxxxxxxxX手机---sXXXXXXXXXXX',
-                    num: 8,
-                    price: 100,
-                }
-            ]
-        }
-    ]
+import ShoppingCartItem from './ShoppingCartItem.vue'
+import { usePurchaseListStore } from '@/stores/purchaseList'
+import { configProviderProps } from 'element-plus'
+import { useRouter } from 'vue-router'
+import message from '@/utils/message'
+import { ref, onMounted, watch } from 'vue'
+import { getShoppingCart } from '@/api/user'
+const router = useRouter()
+const purchaseListStore = usePurchaseListStore()
+const dataSource = ref({ list: [] })
+const totalPrice = ref(0)
+onMounted(async () => {
+    const res = await getShoppingCart({
+        pageSize: '10',
+        pageNo: '1',
+    })
+    if (!res) return
+    dataSource.value = res.data
+})
+watch( purchaseListStore.list, (val) => {
+    totalPrice.value = val.reduce((total, item) => {
+        return total + item.price * item.num
+    }, 0)
+}, {immediate: true}
+)
+const purchase = () => {
+    if (purchaseListStore.list.length === 0) {
+        message.warning('请至少选择一件商品')
+        return
+    }
+    console.log('purchase', purchaseListStore.list)
+    router.push('/purchase')
+}
+
+
+const delItem = (id) => {
+    dataSource.value.list = dataSource.value.list.filter(item => item.productId !== id)
 }
 </script>
 
 <style scoped lang="scss">
-main{
+main {
     border-radius: 20px;
     background-color: white;
-    header{
+
+    header {
         display: flex;
         align-items: center;
         font-size: 22px;
         padding: 20px 20px;
         border-bottom: 1px solid #eee;
         justify-content: space-between;
-        .info{
+
+        .info {
             display: flex;
             align-items: center;
-            span{
+
+            span {
                 margin-right: 20px;
                 font-size: 20px;
             }
-            .price{
+
+            .price {
                 color: pink;
                 font-size: 28px;
                 font-weight: 500;
             }
-            button{
+
+            button {
                 outline: none;
                 border: none;
                 border-radius: 20px;

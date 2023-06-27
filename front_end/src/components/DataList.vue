@@ -4,15 +4,15 @@
 		<div v-if="loading">
 			<el-skeleton :rows="skeletonRows" animated />
 		</div>
-		<main v-else>
+		<div class="box" v-else>
 			<div class="content" :style="{'display': flex?'flex':''}">
 				<slot v-for="(item, index) in dataSource.list" :key="index" :data="item" />
 			</div>
 			<div class="page">
-				<el-pagination :page-size="dataSource.pageSize" :page-count="dataSource.pageCount"
+				<el-pagination hide-on-single-page :page-size="dataSource.pageSize" :page-count="dataSource.pageCount"
 					layout="prev, pager, next" :total="dataSource.total" @update:current-page="pageNoChange" />
 			</div>
-		</main>
+		</div>
 	</div>
 </template>
 

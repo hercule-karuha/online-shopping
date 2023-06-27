@@ -40,7 +40,7 @@
 	</div>
 </template>
 <script setup>
-import { watch, onMounted, nextTick } from 'vue'
+import { watch, onBeforeMount, nextTick } from 'vue'
 import { RouterView, useRouter } from 'vue-router'
 import { useUserInfoStore } from '@/stores/userInfo.js'
 const router = useRouter()
@@ -66,13 +66,14 @@ const goWithCheck = (path) => {
 		userInfoStore.needLogin = true
 	}
 }
-onMounted(async () => {
+onBeforeMount(async () => {
 	// await异步加载 requst.js 否则会提示没有use(pinia)
 	const { getUserInfo } = await import('@/api/user.js')
 	getUserInfoFunc = getUserInfo
 	const res = await getUserInfo()
 	if (res.code === 200) {
 		userInfoStore.userInfo = res.data
+		console.log(res.data)
 	}
 })
 </script>
