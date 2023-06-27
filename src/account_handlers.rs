@@ -7,9 +7,9 @@ use axum_macros::debug_handler;
 
 use axum_sessions::extractors::{ReadableSession, WritableSession};
 
-use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool};
 use diesel::PgConnection;
+use diesel::{dsl::count_star, prelude::*};
 use diesel::{insert_into, update};
 use serde_json::{from_value, json, Value};
 
@@ -330,6 +330,17 @@ pub async fn get_shopping_cart(
 
     let conn = &mut pool.get().unwrap();
 
+    let total = match shopping_carts
+        .select(count_star())
+        .filter(user_id.eq(usr_id))
+        .first::<i64>(conn)
+    {
+        Ok(all) => all,
+        Err(_) => {
+            return server_error();
+        }
+    };
+
     let carts = match shopping_carts
         .select(CartInfo::as_select())
         .offset((p_size * (p_no - 1)) as i64)
@@ -366,7 +377,13 @@ pub async fn get_shopping_cart(
     response::Json(json!({
         "code": 200,
         "msg": "修改成功",
-        "data": resvec
+        "data": {
+        "pageSize":p_size,
+        "pageNo":p_no,
+        "pageCount":(total / p_size as i64).to_string(),
+        "total":total.to_string(),
+        "list":resvec
+        },
     }))
 }
 
@@ -413,6 +430,17 @@ pub async fn get_order_list(
 
     let conn = &mut pool.get().unwrap();
 
+    let total = match orders
+        .select(count_star())
+        .filter(user_id.eq(usr_id))
+        .first::<i64>(conn)
+    {
+        Ok(all) => all,
+        Err(_) => {
+            return server_error();
+        }
+    };
+
     let usr_orders = match orders
         .select(OrderInfo::as_select())
         .offset((p_size * (p_no - 1)) as i64)
@@ -443,7 +471,13 @@ pub async fn get_order_list(
     response::Json(json!({
         "code": 200,
         "msg": "请求成功",
-        "data": resvec
+        "data": {
+            "pageSize":p_size,
+            "pageNo":p_no,
+            "pageCount":(total / p_size as i64).to_string(),
+            "total":total.to_string(),
+            "list":resvec
+        }
     }))
 }
 

@@ -63,6 +63,8 @@ async fn main() {
         .route("/api/user/getDetailOrder", post(get_order_detail))
         .route("/api/seach/searchProduct", post(search_product))
         .route("/api/store/getOrders", post(get_sale_order))
+        .route("/api/search/searchOrders", post(search_orders))
+        .route("/api/search/searchSales", post(search_sales))
         .with_state(pool)
         .layer(session_layer)
         .layer(DefaultBodyLimit::max(1024 * 1024 * 10));

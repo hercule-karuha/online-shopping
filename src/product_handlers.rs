@@ -282,6 +282,7 @@ pub async fn get_recommend(
 
     let mut result_vec: Vec<Value> = Vec::new();
     let conn = &mut pool.get().unwrap();
+
     let results = products
         .offset((page_no * page_sz).into())
         .limit(page_sz.into())
@@ -306,7 +307,7 @@ pub async fn get_recommend(
             "data": {
                 "pageSize": page_sz.to_string(), //一页的个数
                 "pageNo": page_no.to_string(), //页数
-                "pageCount": (result_vec.len() as i32/page_sz).to_string(), //总页数
+                "pageCount": "1", //总页数
                 "total": result_vec.len().to_string(), //总记录数
                 "list":result_vec,
             },

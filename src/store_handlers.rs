@@ -5,9 +5,9 @@ use axum::{
 
 use axum_sessions::extractors::ReadableSession;
 
-use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool};
 use diesel::PgConnection;
+use diesel::{dsl::count_star, prelude::*};
 use diesel::{insert_into, update};
 use serde_json::{from_value, json, Value};
 
@@ -257,6 +257,12 @@ pub async fn get_product_list(
 
     let conn = &mut pool.get().unwrap();
 
+    let total = products
+        .select(count_star())
+        .filter(store_id.eq(st_id))
+        .first::<i64>(conn)
+        .unwrap();
+
     let query = products
         .filter(store_id.eq(st_id))
         .offset((page_no * page_sz).into())
@@ -293,8 +299,8 @@ pub async fn get_product_list(
         "data": {
             "pageSize": page_sz.to_string(), //一页的个数
             "pageNo": page_no.to_string(), //页数
-            "pageCount": (result_vec.len() as i32/page_sz).to_string(), //总页数
-            "total": result_vec.len().to_string(), //总记录数
+            "pageCount": (total /page_sz as i64).to_string(), //总页数
+            "total": total.to_string(), //总记录数
             "list":result_vec,
         },
     }))
@@ -355,6 +361,17 @@ pub async fn get_sale_order(
 
     let conn = &mut pool.get().unwrap();
 
+    let total = match orders
+        .select(count_star())
+        .filter(store_id.eq(st_id))
+        .first::<i64>(conn)
+    {
+        Ok(all) => all,
+        Err(_) => {
+            return server_error();
+        }
+    };
+
     let usr_orders = match orders
         .select(OrderInfo::as_select())
         .offset((p_size * (p_no - 1)) as i64)
@@ -385,6 +402,12 @@ pub async fn get_sale_order(
     response::Json(json!({
         "code": 200,
         "msg": "请求成功",
-        "data": resvec
+        "data": {
+            "pageSize":p_size,
+            "pageNo":p_no,
+            "pageCount":(total / p_size as i64).to_string(),
+            "total":total.to_string(),
+            "list":resvec
+        }
     }))
 }
