@@ -15,8 +15,8 @@ use account_handlers::*;
 use file_handlers::*;
 use product_handlers::*;
 use purchase_handlers::*;
-use store_handlers::*;
 use search_handlers::*;
+use store_handlers::*;
 
 pub mod account_handlers;
 pub mod error_return;
@@ -25,8 +25,8 @@ pub mod model;
 pub mod product_handlers;
 pub mod purchase_handlers;
 pub mod schema;
-pub mod store_handlers;
 pub mod search_handlers;
+pub mod store_handlers;
 
 #[tokio::main]
 async fn main() {
@@ -45,11 +45,11 @@ async fn main() {
         .route("/api/user/getUserInfo", get(get_user_info))
         .route("/api/file/uploadImage", post(upload_image))
         .route("/api/file/getImage/*image_path", get(get_image))
-        .route("/api//file/getAvatar/:id", get(get_avatar))
+        .route("/api/file/getAvatar/:id", get(get_avatar))
         .route("/api/file/getProductCover/:id", get(get_products_cover))
         .route("/api/file/getStoreCover/:id", get(get_store_cover))
         .route("/api/product/newProduct", post(new_product))
-        .route("/api/user/editUserinfo", post(edit_user))
+        .route("/api/user/editUserInfo", post(edit_user))
         .route("/api/product/editProduct", post(edit_product))
         .route("/api/store/getStoreInfo/:id", get(get_store_info))
         .route("/api/product/getProduct/:id", get(get_product_info))
@@ -61,10 +61,12 @@ async fn main() {
         .route("/api/user/getShoppingCart", post(get_shopping_cart))
         .route("/api/user/getOrderList", post(get_order_list))
         .route("/api/user/getDetailOrder", post(get_order_detail))
-        .route("/api/seach/searchProduct", post(search_product))
+        .route("/api/search/searchProduct", post(search_product))
         .route("/api/store/getOrders", post(get_sale_order))
         .route("/api/search/searchOrders", post(search_orders))
         .route("/api/search/searchSales", post(search_sales))
+        .route("/api/user/getDetailUserInfo", get(get_user_detail))
+        .route("/api/product/getRecommend", post(get_recommend))
         .with_state(pool)
         .layer(session_layer)
         .layer(DefaultBodyLimit::max(1024 * 1024 * 10));

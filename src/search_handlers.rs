@@ -10,7 +10,7 @@ use diesel::PgConnection;
 use diesel::{dsl::count_star, prelude::*};
 use serde_json::{from_value, json, Value};
 
-use crate::model::*;
+use crate::{model::*};
 
 use crate::error_return::*;
 
@@ -74,10 +74,10 @@ pub async fn search_product(
         .into_boxed();
 
     let filt_query = match st_id {
-        0 => query.filter(name.like(format!("%{}%", request_data.keyword))),
+        0 => query.filter(name.like(format!("%{}%", request_data.keyword)).and(delete_product.ne(1))),
         _ => query.filter(
             name.like(format!("%{}%", request_data.keyword))
-                .and(store_id.eq(st_id)),
+                .and(store_id.eq(st_id).and(delete_product.ne(1))),
         ),
     };
 
@@ -94,7 +94,7 @@ pub async fn search_product(
         if let (p_id, Some(p_name), Some(p_pric)) = prod_info {
             value_vec.push(json!({
                 "productId":p_id.to_string(),
-                "name":p_name,
+                "productName":p_name,
                 "price":p_pric.to_string(),
             }));
         }
@@ -106,7 +106,7 @@ pub async fn search_product(
         "data": {
             "pageSize":p_size,
             "pageNo":p_no,
-            "pageCount":(total / p_size as i64).to_string(),
+            "pageCount":((total / p_size as i64) + (total % p_size as i64> 0) as i64).to_string(),
             "total":total.to_string(),
             "list":value_vec
         },
@@ -188,7 +188,7 @@ pub async fn search_orders(
         "data": {
             "pageSize":p_size,
             "pageNo":p_no,
-            "pageCount":(total / p_size as i64).to_string(),
+            "pageCount":((total / p_size as i64) + (total % p_size as i64> 0) as i64).to_string(),
             "total":total.to_string(),
             "list":value_vec
         },
@@ -285,7 +285,7 @@ pub async fn search_sales(
         "data": {
             "pageSize":p_size,
             "pageNo":p_no,
-            "pageCount":(total / p_size as i64).to_string(),
+            "pageCount":((total / p_size as i64) + (total % p_size as i64> 0) as i64).to_string(),
             "total":total.to_string(),
             "list":value_vec
         },

@@ -34,6 +34,17 @@ impl UpdateUser {
     }
 }
 
+#[derive(Queryable, Selectable)]
+#[diesel(table_name = crate::schema::users)]
+pub struct UserDetail {
+    pub user_id: i32,
+    pub user_name: Option<String>,
+    pub gender: Option<i32>,
+    pub phone: Option<String>,
+    pub address: Option<String>,
+    pub user_type: Option<i32>,
+}
+
 #[derive(Queryable, Selectable, AsChangeset)]
 #[diesel(table_name = crate::schema::stores)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
@@ -67,6 +78,7 @@ pub struct Product {
     pub stock: Option<i32>,
     pub sales: Option<i32>,
     pub store_address: Option<String>,
+    pub delete_product: Option<i32>,
 }
 
 impl Product {
@@ -81,6 +93,7 @@ impl Product {
             stock: None,
             sales: Some(0),
             store_address: None,
+            delete_product: None,
         }
     }
 }

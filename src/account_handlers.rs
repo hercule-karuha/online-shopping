@@ -199,16 +199,78 @@ pub async fn login(
 }
 
 pub async fn get_user_info(session: WritableSession) -> response::Json<Value> {
-    response::Json(json!({
-        "code": 200,
-        "msg": "请求成功",
-        "data": {
-            "userId": session.get::<i32>("id").unwrap(),
-            "userName": session.get::<String>("name").unwrap(), //用户昵称
-            "sex": session.get::<i32>("gender").unwrap(), //性别
-            "userType": session.get::<i32>("type").unwrap() //是否是商家 0不是 1 是
+    match session.get::<i32>("id") {
+        Some(id) => id,
+        None => {
+            return no_login_error();
         }
-    }))
+    };
+
+    match session.get::<i32>("type").unwrap() {
+        0 => response::Json(json!({
+            "code": 200,
+            "msg": "请求成功",
+            "data": {
+                "userId": session.get::<i32>("id").unwrap(),
+                "userName": session.get::<String>("name").unwrap(), //用户昵称
+                "sex": session.get::<i32>("gender").unwrap(), //性别
+                "userType": session.get::<i32>("type").unwrap() //是否是商家 0不是 1 是
+            }
+        })),
+        1 => response::Json(json!({
+            "code": 200,
+            "msg": "请求成功",
+            "data": {
+                "userId": session.get::<i32>("id").unwrap(),
+                "userName": session.get::<String>("name").unwrap(), //用户昵称
+                "sex": session.get::<i32>("gender").unwrap(), //性别
+                "userType": session.get::<i32>("type").unwrap(), //是否是商家 0不是 1 是
+                "storeId":session.get::<i32>("store_id").unwrap()
+            }
+        })),
+        _ => parameter_error(),
+    }
+}
+
+pub async fn get_user_detail(
+    State(pool): State<Pool<ConnectionManager<PgConnection>>>,
+    session: ReadableSession,
+) -> response::Json<Value> {
+    use crate::schema::users::dsl::*;
+    let usr_id = match session.get::<i32>("id") {
+        Some(id) => id,
+        None => {
+            return no_login_error();
+        }
+    };
+
+    let conn = &mut pool.get().unwrap();
+
+    match users
+        .select(UserDetail::as_select())
+        .filter(user_id.eq(usr_id))
+        .first(conn)
+    {
+        Ok(usr_info) => response::Json(json!({
+            "code": 200,
+            "msg": "登陆成功",
+            "data": {
+                "userId": usr_info.user_id.to_string(),
+                "userName": usr_info.user_name.unwrap().to_string(), //用户昵称
+                "sex": usr_info.gender.unwrap().to_string(), //性别
+                "userType": usr_info.user_type.unwrap().to_string(), //是否是商家 0不是 1 是
+                "address":match usr_info.address {
+                    Some(addr) =>addr,
+                    None => "".to_string()
+                },
+                "phone":match usr_info.phone {
+                    Some(pho) =>pho,
+                    None => "".to_string()
+                }
+            }
+        })),
+        Err(_) => server_error(),
+    }
 }
 
 pub async fn edit_user(
@@ -380,7 +442,7 @@ pub async fn get_shopping_cart(
         "data": {
         "pageSize":p_size,
         "pageNo":p_no,
-        "pageCount":(total / p_size as i64).to_string(),
+        "pageCount":((total / p_size as i64) + (total % p_size as i64> 0) as i64).to_string(),
         "total":total.to_string(),
         "list":resvec
         },

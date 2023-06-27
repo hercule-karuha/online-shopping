@@ -10,9 +10,9 @@ diesel::table! {
         quantity -> Nullable<Int4>,
         #[max_length = 20]
         user_phone -> Nullable<Varchar>,
-        #[max_length = 100]
+        #[max_length = 1000]
         user_address -> Nullable<Varchar>,
-        #[max_length = 100]
+        #[max_length = 1000]
         store_address -> Nullable<Varchar>,
         store_id -> Nullable<Int4>,
         #[max_length = 100]
@@ -30,10 +30,11 @@ diesel::table! {
         price -> Nullable<Float8>,
         sales -> Nullable<Int4>,
         stock -> Nullable<Int4>,
-        #[max_length = 200]
+        #[max_length = 2000]
         detail_images -> Nullable<Varchar>,
-        #[max_length = 100]
+        #[max_length = 1000]
         store_address -> Nullable<Varchar>,
+        delete_product -> Nullable<Int4>,
     }
 }
 
@@ -51,7 +52,7 @@ diesel::table! {
         user_id -> Nullable<Int4>,
         #[max_length = 100]
         name -> Nullable<Varchar>,
-        #[max_length = 100]
+        #[max_length = 1000]
         address -> Nullable<Varchar>,
     }
 }

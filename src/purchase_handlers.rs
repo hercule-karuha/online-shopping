@@ -21,6 +21,7 @@ pub async fn add_shopping_cart(
     session: ReadableSession,
     Json(payload): Json<Value>,
 ) -> response::Json<Value> {
+    use crate::schema::products::dsl;
     use crate::schema::shopping_carts::dsl::*;
     let usr_id = match session.get::<i32>("id") {
         Some(id) => id,
@@ -56,13 +57,34 @@ pub async fn add_shopping_cart(
                 return parameter_error();
             }
         };
+
+        match dsl::products
+            .select(dsl::delete_product)
+            .filter(dsl::product_id.eq(prod_id))
+            .first::<Option<i32>>(conn)
+            .unwrap()
+        {
+            Some(1) => {
+                return parameter_error();
+            }
+            _ => {}
+        }
+
         match insert_into(shopping_carts)
             .values((product_id.eq(prod_id), user_id.eq(usr_id), quantity.eq(num)))
             .execute(conn)
         {
             Ok(_) => {}
             Err(_) => {
-                return server_error();
+                match update(shopping_carts.filter(user_id.eq(usr_id).and(product_id.eq(prod_id))))
+                    .set(quantity.eq(quantity + num))
+                    .execute(conn)
+                {
+                    Ok(_) => {}
+                    Err(_) => {
+                        return server_error();
+                    }
+                }
             }
         };
     }
@@ -81,6 +103,7 @@ pub async fn immediate_purchase(
 ) -> response::Json<Value> {
     use crate::schema::orders::dsl::*;
     use crate::schema::products::dsl;
+    use crate::schema::shopping_carts;
 
     println!("purchase something");
 
@@ -123,6 +146,18 @@ pub async fn immediate_purchase(
             }
         };
 
+        match dsl::products
+            .select(dsl::delete_product)
+            .filter(dsl::product_id.eq(prod_id))
+            .first::<Option<i32>>(conn)
+            .unwrap()
+        {
+            Some(1) => {
+                return parameter_error();
+            }
+            _ => {}
+        }
+
         let prod_info = update(dsl::products.find(prod_id))
             .set((
                 dsl::stock.eq(dsl::stock - num),
@@ -147,7 +182,15 @@ pub async fn immediate_purchase(
             ))
             .execute(conn)
         {
-            Ok(_) => {}
+            Ok(_) => delete(
+                shopping_carts::dsl::shopping_carts.filter(
+                    shopping_carts::dsl::user_id
+                        .eq(usr_id)
+                        .and(shopping_carts::dsl::product_id.eq(prod_id)),
+                ),
+            )
+            .execute(conn)
+            .expect("cannot delete"),
             Err(_) => {
                 return server_error();
             }

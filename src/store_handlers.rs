@@ -3,7 +3,7 @@ use axum::{
     response,
 };
 
-use axum_sessions::extractors::ReadableSession;
+use axum_sessions::extractors::{ReadableSession, WritableSession};
 
 use diesel::r2d2::{ConnectionManager, Pool};
 use diesel::PgConnection;
@@ -20,7 +20,7 @@ use crate::error_return::*;
 
 pub async fn new_store(
     State(pool): State<Pool<ConnectionManager<PgConnection>>>,
-    session: ReadableSession,
+    mut session: WritableSession,
     mut multipart: Multipart,
 ) -> Json<Value> {
     use crate::schema::stores::dsl::*;
@@ -76,6 +76,11 @@ pub async fn new_store(
         .set(dsl::user_type.eq(1))
         .execute(conn)
         .expect("update fail");
+
+    session.insert("type", 1).expect("cannot store value");
+    session
+        .insert("store_id", s_info.as_ref().unwrap().store_id)
+        .expect("cannot store value");
 
     let path = "images/store_cover/".to_string() + &s_info.as_ref().unwrap().store_id.to_string();
     println!("{}", path);
@@ -259,12 +264,12 @@ pub async fn get_product_list(
 
     let total = products
         .select(count_star())
-        .filter(store_id.eq(st_id))
+        .filter(store_id.eq(st_id).and(delete_product.ne(1)))
         .first::<i64>(conn)
         .unwrap();
 
     let query = products
-        .filter(store_id.eq(st_id))
+        .filter(store_id.eq(st_id).and(delete_product.ne(1)))
         .offset((page_no * page_sz).into())
         .limit(page_sz.into());
 
@@ -299,7 +304,7 @@ pub async fn get_product_list(
         "data": {
             "pageSize": page_sz.to_string(), //一页的个数
             "pageNo": page_no.to_string(), //页数
-            "pageCount": (total /page_sz as i64).to_string(), //总页数
+            "pageCount": ((total / page_sz as i64) + (total % page_sz as i64> 0) as i64).to_string(), //总页数
             "total": total.to_string(), //总记录数
             "list":result_vec,
         },
