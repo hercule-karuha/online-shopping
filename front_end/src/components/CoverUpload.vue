@@ -10,13 +10,34 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import message from '@/utils/message'
 import { Plus } from '@element-plus/icons-vue'
 import { base64 } from '@/utils/tools'
 import { getCurrentInstance } from 'vue'
 const { proxy } = getCurrentInstance()
+const props = defineProps({
+    imageUrl: {
+        type: String,
+        default: ''
+    },
+    update: {
+        type: Boolean,
+        default: false
+    }
+})
+
 const imageUrl = ref('')
+// onMounted(() => {
+//     if (props.update) {
+//         imageUrl.value = props.imageUrl
+//     }
+// })
+watch(() => props.imageUrl, (val) => {
+    imageUrl.value = val
+}, { immediate: true })
+
+
 const emit = defineEmits([
     'uploadImage'
 ])

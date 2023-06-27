@@ -18,8 +18,39 @@ export const register = (data) => {
 
 export const getUserInfo = (params) => {
     return request({
-        url: '/user/userInfo',
+        url: '/user/getUserInfo',
         method: 'get',
         params
+    })
+}
+
+export const getShoppingCart = (data) => {
+    return request({
+        url: '/user/getShoppingCart',
+        method: 'post',
+        data
+    })
+}
+
+export const getDetailUserInfo = () => {
+    return request({
+        url: '/user/getDetailUserInfo',
+        method: 'get'
+    })
+}
+
+export const editUserInfo = (data) => {
+    return request({
+        url: '/user/editUserInfo',
+        method: 'post',
+        data
+    })
+}
+
+export const getOrderList = (data) => {
+    return request({
+        url: '/user/getOrderList',
+        method: 'post',
+        data
     })
 }

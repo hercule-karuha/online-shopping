@@ -3,21 +3,18 @@
         <header>
             <div class="info">
                 <div class="cover">
-                    <img :src="storeInfo.cover" alt="">
+                    <img :src="proxy.globalInfo.storeCoverUrl+storeInfo.storeId" alt="">
                 </div>
                 <div class="name">{{ storeInfo.name }}</div>
-                <div class="sales">
-                    <span>销量</span>
-                    <span>{{ storeInfo.sales }}</span>
-                </div>
-                <div class="edit">
+ 
+                <div class="edit" v-if="userInfoStore.userInfo&&userInfoStore.userInfo.userId == storeInfo.userId">
                     <div>
                         <el-icon><EditPen /></el-icon>
-                        <span>编辑店铺</span>
+                        <span @click="router.push('/store/edit')">编辑店铺</span>
                     </div>
                     <div>
                         <el-icon><CirclePlus /></el-icon>
-                        <span>商品上新</span>
+                        <span @click="router.push('/store/newProduct')">商品上新</span>
                     </div>
                 </div>
             </div>
@@ -33,19 +30,43 @@
         </header>
         <div class="content">
             <el-tabs v-model="activeName" class="demo-tabs" @tab-click="handleClick">
-            <el-tab-pane :label="tabNav.all" name="all">
-                <DataList></DataList>
+            <el-tab-pane label="全部" name="all">
+                <DataList :dataSource="dataSource" v-if="activeName == 'all'">
+                    <template #default="{data}">
+                        <ProductItem :data=data></ProductItem>
+                    </template>
+                </DataList>
             </el-tab-pane>
-            <el-tab-pane :label="tabNav.sales" name="sales">
-                <DataList></DataList>
+            <el-tab-pane label="销量⬆️" name="saleup">
+                <DataList :dataSource="dataSource" v-if="activeName == 'saleup'">
+                    <template #default="{data}">
+                        <ProductItem :data=data></ProductItem>
+                    </template>
+                </DataList>
             </el-tab-pane>
-            <el-tab-pane :label="tabNav.price" name="price">
-                <DataList></DataList>
+            <el-tab-pane label="销量⬇️" name="saledown">
+                <DataList :dataSource="dataSource" v-if="activeName == 'saledown'" >
+                    <template #default="{data}">
+                        <ProductItem :data=data></ProductItem>
+                    </template>
+                </DataList>
             </el-tab-pane>
-            <el-tab-pane :label="tabNav.new" name="new">
-                <DataList></DataList>
+            <el-tab-pane label="价格⬆️" name="priceup">
+                <DataList :dataSource="dataSource" v-if="activeName == 'priceup'">
+                    <template #default="{data}">
+                        <ProductItem :data=data></ProductItem>
+                    </template>
+                </DataList>
             </el-tab-pane>
-            <el-tab-pane :label="tabNav.orders" name="orders">
+            <el-tab-pane label="价格⬇️" name="pricedown">
+                <DataList :dataSource="dataSource" v-if="activeName == 'pricedown'" >
+                    <template #default="{data}">
+                        <ProductItem :data=data></ProductItem>
+                    </template>
+                </DataList>
+            </el-tab-pane>
+            
+            <el-tab-pane v-if="userInfoStore.userInfo && userInfoStore.userInfo.userId == storeInfo.userId" label="订单" name="orders">
                 <DataList></DataList>
             </el-tab-pane>
         </el-tabs>
@@ -54,24 +75,78 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, getCurrentInstance, onMounted } from 'vue'
 import DataList from '@/components/DataList.vue'
-const storeInfo = {
-    name: '小米旗舰店',
-    sales: 1000,
-    address: '福建省厦门市湖里区',
-    cover: 'https://pic.imgdb.cn/item/64475aff0d2dde5777855968.jpg'
-}
-const activeName = ref('all')
-const tabNav = ref({
-    all: '全部',
-    sales: '销量⬇️',
-    price: '价格⬆️',
-    new: '新品',
-    orders: '订单'
+import { getStoreInfo, getStoreProductList, getOrders } from '@/api/store'
+import { useRoute, useRouter } from 'vue-router'
+import { useUserInfoStore } from '@/stores/userInfo.js'
+import ProductItem from '../product/ProductItem.vue'
+const userInfoStore = useUserInfoStore()
+const { proxy } = getCurrentInstance()
+const route = useRoute()
+const router = useRouter()
+const storeInfo = ref({
 })
-const handleClick = (tab) => {
-    console.log(tab.props.name)
+
+const activeName = ref('all')
+let query = {}
+const dataSource = ref({ list:[]})
+
+// orderType 0 时间顺序 1 时间倒序  2 销量顺序 3 销量降序 4 价格升序 5价格降序
+onMounted(async () => {
+    const result = await getStoreInfo(route.params.id)
+    if (!result) return
+    storeInfo.value = result.data
+    const requst = {
+        storeId: route.params.id,
+        pageSize: '15',
+        pageNo: '1',
+        orderType: '0'
+    }
+    const listResult = await getStoreProductList(requst)
+    if (!listResult) return
+    dataSource.value = listResult.data
+
+})
+
+const handleClick = async (tab) => {
+    console.log(tab.props)
+    query = {
+        pageSize: '15',
+        pageNo: '1',
+        storeId: route.params.id
+    }
+    // 点击相同的tab
+    if (activeName.value == tab.props.name) {
+        retuen
+    } else {
+        activeName.value = tab.props.name
+        if (activeName.value == 'all') {
+            query.orderType = '0'
+        } else if (activeName.value == 'saleup') {
+            query.orderType = '2'
+        } else if (activeName.value == 'saledown') {
+            query.orderType = '3'
+        } else if (activeName.value == 'priceup') {
+            query.orderType = '4'
+        } else if (activeName.value == 'pricedown') {
+            query.orderType = '5'
+        } else if (activeName.value == 'orders') {
+            query = {
+                pageSize: '15',
+                pageNo: '1',
+                storeId: route.params.id
+            }
+            const res = await getOrders(query)
+            if (!res) return
+            dataSource.value = res.data
+            return
+        }
+    }
+    getStoreProductList(query).then(res => {
+        if (!res) return
+        dataSource.value = res.data
+    })
 }
 </script>
 
@@ -108,13 +183,6 @@ main{
             .name{
                 font-size: 30px;
                 margin-left: 40px;
-            }
-            .sales{
-                display: flex;
-                flex-direction: column;
-                margin-left: 40px;
-                font-size: 18px;
-                align-items: center;
             }
             .edit{
                 display: flex;
