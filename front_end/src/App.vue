@@ -55,7 +55,7 @@ const goTop = () => {
 }
 watch(() => userInfoStore.needLogin, (val) => {
 	if (val) {
-		if (route.path === '/' || route.path.contains('/product/detail')){
+		if (route.path === '/' || route.path.includes('/product/detail')){
 			userInfoStore.needLogin = false
 			return
 		}

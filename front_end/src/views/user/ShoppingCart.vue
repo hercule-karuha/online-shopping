@@ -2,7 +2,7 @@
     <main>
         <header>
             <div class="title">
-                <span>购物车( 全部{{ 10 }} )</span>
+                <span>购物车( 全部{{ dataSource.total?dataSource.total:'0' }} )</span>
             </div>
             <div class="info">
                 <span>已选商品({{ 0 }})</span>
@@ -36,7 +36,7 @@ const totalPrice = ref(0)
 const loading = ref(false)
 onMounted(async () => {
     const res = await getShoppingCart({
-        pageSize: '10',
+        pageSize: '8',
         pageNo: '1',
     })
     if (!res) return
@@ -46,14 +46,12 @@ watch( purchaseListStore.list, (val) => {
     totalPrice.value = val.reduce((total, item) => {
         return total + item.price * item.num
     }, 0)
-}, {immediate: true}
-)
+}, {immediate: true})
 const purchase = () => {
     if (purchaseListStore.list.length === 0) {
         message.warning('请至少选择一件商品')
         return
     }
-    console.log('purchase', purchaseListStore.list)
     router.push('/purchase')
 }
 
@@ -65,7 +63,7 @@ const delItem = (id) => {
 const changePage = async (pageNo) => {
     loading.value = true
     const res = await getShoppingCart({
-        pageSize: '10',
+        pageSize: '8',
         pageNo:  (Number.parseInt(pageNo)).toString(),
     })
     loading.value = false

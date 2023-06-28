@@ -54,7 +54,7 @@
 							开店
 						</div>
 					</div>
-					<div class="func">
+					<div class="func" v-if="userInfo.userId">
 						<div @click="router.push('/user/shoppingCart')">
 							<el-icon>
 								<ShoppingCart />

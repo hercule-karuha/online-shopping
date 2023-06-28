@@ -17,7 +17,7 @@
             <nav>
                 <ul class="tabs">
                     <li><a @click="changeTab('/user/shoppingCart')"
-                    :class="[route.name=='shoppingCart'?'active_tab':'']">购物车</a></li>
+                        :class="[route.name=='shoppingCart'?'active_tab':'']">购物车</a></li>
                     <li><a @click="changeTab('/user/order')" 
                         :class="[route.name=='order'?'active_tab':'']">购买记录</a></li>
                     <!-- <li><a href="">买过的店</a></li> -->
@@ -72,14 +72,14 @@ import { parseAddressCodeArr } from '@/utils/tools'
 import message from '@/utils/message'
 import { regionData } from 'element-china-area-data'
 import { useUserInfoStore } from '@/stores/userInfo'
-import { getDetailUserInfo, editUserInfo } from '@/api/user'
+import { getDetailUserInfo, editUserInfo, getUserInfo } from '@/api/user'
 const { proxy } = getCurrentInstance()
 const options = regionData
 const userInfoStore = useUserInfoStore()
 console.log(userInfoStore.userinfo)
 const route = useRoute()
 const router = useRouter()
-
+const changeAvatar = ref(false)
 
 const dialogConfig = reactive({
     show: false,
@@ -98,8 +98,9 @@ const dialogConfig = reactive({
             click: async () => {
                 if (!formDataRef.value.validate()) return
                 const uploadForm = new FormData()
-                if (formData.value.avatar) {
-                    uploadForm.append('avatar', formData.value.avatar)
+                if (formData.value.cover) {
+                    uploadForm.append('avatar', formData.value.cover)
+                    changeAvatar.value = true
                 }
                 uploadForm.append('userName', formData.value.userName)
                 uploadForm.append('gender', formData.value.gender)
@@ -112,6 +113,12 @@ const dialogConfig = reactive({
                 const res = await editUserInfo(uploadForm)
                 if (!res) return
                 message.success('修改成功')
+                const updateUserInfo = await getUserInfo()
+                if (!updateUserInfo) return
+                userInfoStore.userInfo = updateUserInfo.data
+                if (changeAvatar.value) {
+                    router.go()
+                }
                 dialogConfig.show = false
             }
         }
