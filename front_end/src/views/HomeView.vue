@@ -358,7 +358,7 @@ main {
 			background-color: $main-color;
 			border-radius: 10px;
 			background-size: cover;
-			background-image: url('./1.jpg');
+			background-image: url(../assets/1.jpg);
 		}
 
 		.user-info {

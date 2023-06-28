@@ -37,7 +37,7 @@
 			<div :class="['cover', accountType == 'register' ? 'register-cover' : '']">
 				<p>欢迎来到<span>XX商城</span></p>
 				<div class="img">
-					<img src="https://pic.imgdb.cn/item/6488985b1ddac507cc1f59cd.jpg?w=300" alt="">
+					<img src="../assets/2.jpg" alt="">
 				</div>
 				<span>{{ accountType === 'login' ? '没有' : '已有' }}账号?</span>
 				<button @click="changeType">
