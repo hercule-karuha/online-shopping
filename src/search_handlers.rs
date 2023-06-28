@@ -101,7 +101,7 @@ pub async fn search_product(
         "msg": "请求成功",
         "data": {
             "pageSize":p_size,
-            "pageNo":p_no+1,
+            "pageNo":p_no,
             "pageCount":((total / p_size as i64) + (total % p_size as i64> 0) as i64).to_string(),
             "total":total.to_string(),
             "list":value_vec
@@ -192,7 +192,7 @@ pub async fn search_orders(
         "msg": "请求成功",
         "data": {
             "pageSize":p_size,
-            "pageNo":p_no+1,
+            "pageNo":p_no,
             "pageCount":((total / p_size as i64) + (total % p_size as i64> 0) as i64).to_string(),
             "total":total.to_string(),
             "list":value_vec
@@ -297,7 +297,7 @@ pub async fn search_sales(
         "msg": "请求成功",
         "data": {
             "pageSize":p_size,
-            "pageNo":p_no+1,
+            "pageNo":p_no,
             "pageCount":((total / p_size as i64) + (total % p_size as i64> 0) as i64).to_string(),
             "total":total.to_string(),
             "list":value_vec

@@ -365,7 +365,7 @@ pub async fn get_sale_order(
     let usr_orders = match orders
         .select(OrderInfo::as_select())
         .offset((p_size * (p_no - 1)) as i64)
-        .limit(p_size.into())
+        .limit(p_size.into()).order(order_id.desc())
         .filter(store_id.eq(st_id))
         .get_results(conn)
     {
@@ -394,7 +394,7 @@ pub async fn get_sale_order(
         "msg": "请求成功",
         "data": {
             "pageSize":p_size,
-            "pageNo":p_no+1,
+            "pageNo":p_no,
             "pageCount":(total / p_size as i64).to_string(),
             "total":total.to_string(),
             "list":resvec
