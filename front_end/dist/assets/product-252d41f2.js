@@ -1,0 +1,1 @@
+import{r as e}from"./request-d304319d.js";const o=t=>e({url:"/product/newProduct",method:"post",data:t}),d=t=>e({url:"/product/getProduct/"+t,method:"get"}),u=t=>e({url:"/product/getRecommend",method:"post",data:t}),c=t=>e({url:"/product/editProduct",method:"post",data:t}),s=t=>e({url:"/product/deleteProduct",method:"post",data:t});export{d as a,s as d,c as e,u as g,o as n};
