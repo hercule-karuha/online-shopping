@@ -9,8 +9,8 @@
 			</div>
 			<div class="search-box">
 				<div ref="searchRef" :class="['search', searchOnFocus === true ? 'search-record' : '']">
-					<input type="text" placeholder="请输入你要搜索的关键词" @focus="showRecord(true)">
-					<div class="btn">
+					<input type="text" v-model="keyword" @keyup.enter="goSearch(keyword)" placeholder="请输入你要搜索的关键词" @focus="showRecord(true)">
+					<div class="btn" @click="goSearch(keyword)">
 						<el-icon>
 							<Search />
 						</el-icon>
@@ -39,7 +39,7 @@
 			<div class="recommend" />
 			<div class="user-info">
 				<div class="avatar">
-					<AvatarModule :user-id="userInfoStore ? userInfoStore.userId : ''" :size="70" />
+					<AvatarModule :user-id="userInfoStore.userInfo ? userInfoStore.userInfo.userId : ''" :size="70" />
 				</div>
 				<div class="info">
 					<p>Hi! {{ userInfo.userName ? userInfo.userName : '你好' }}</p>
@@ -55,25 +55,25 @@
 						</div>
 					</div>
 					<div class="func">
-						<div>
+						<div @click="router.push('/user/shoppingCart')">
 							<el-icon>
 								<ShoppingCart />
 							</el-icon>
-							<span>购物车</span>
+							<span >购物车</span>
 						</div>
-						<div>
+						<!-- <div>
 							<el-icon>
 								<Goods />
 							</el-icon>
 							<span>买过的店</span>
-						</div>
-						<div>
+						</div> -->
+						<div @click="router.push('/user/order')"> 
 							<el-icon>
 								<Clock />
 							</el-icon>
-							<span>购买记录</span>
+							<span >购买记录</span>
 						</div>
-						<div>
+						<div v-if="userInfo.userId && userInfo.userType == 1" @click="router.push('/user/stores')">
 							<el-icon>
 								<TakeawayBox />
 							</el-icon>
@@ -85,9 +85,9 @@
 		</nav>
 		<div class="homepage-list">
 			<span>猜你喜欢</span>
-			<DataList :data-source="dataSource" @page-no-change="pageNoChange">
+			<DataList :data-source="dataSource">
 				<template #default="{ data }">
-					<ProductItem :data="data" @click="router.push('/product/' + data.productId)" />
+					<ProductItem :data="data" />
 				</template>
 			</DataList>
 		</div>
@@ -100,63 +100,57 @@ import AvatarModule from '@/components/AvatarModule.vue'
 import { useUserInfoStore } from '@/stores/userInfo.js'
 import { useRouter } from 'vue-router'
 import DataList from '@/components/DataList.vue'
+import message from '@/utils/message.js'
 import ProductItem from '@/views/product/ProductItem.vue'
+import { getRecommend } from '../api/product'
 const userInfoStore = useUserInfoStore()
+const keyword = ref('')
 const userInfo = computed(() => userInfoStore.userInfo, { immediate: true })
 const searchRef = ref()
 const router = useRouter()
-const searchLogs = ref([
-	'vue',
-	'react',
-	'angular',
-	'webpack',
-	'vite',
-	'rollup',
-	'babel'
-])
-const dataSource = {
-	pageSize: 20,
-	pageCount: 3,
-	total: 60,
-	list: [
-		{
-			productId: 1,
-			cover: 'https://pic.imgdb.cn/item/64475b180d2dde5777857756.webp',
-			name: 'XXxxxxxxxxxxxxXXXXXXXXXXX',
-			descriton: 'xxxxxxxxxxxxxxxxxxxxx xwewxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
-			price: 100,
-			sales: 10
-		},
-		{
-			productId: 1,
-			cover: 'https://pic.imgdb.cn/item/64475b180d2dde5777857756.webp',
-			name: 'XXxxxxxxxxxxxxXXXXXXXXXXX',
-			descriton: 'xxxxxxxxxxxxxxxxxxxxx xwewxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
-			price: 100,
-			sales: 100
-		},
-		{
-			productId: 1,
-			cover: 'https://pic.imgdb.cn/item/63b00e822bbf0e799465cd93.jpg',
-			name: 'XXxxxxxxxxxxxxXXXXXXXXXXX',
-			descriton: 'xxxxxxxxxxxxxxxxxxxxx xwewxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
-			price: 100
-		}
-	]
-}
+// const searchLogs = ref([
+// 	'vue',
+// 	'react',
+// 	'angular',
+// 	'webpack',
+// 	'vite',
+// 	'rollup',
+// 	'babel'
+// ])
+const searchLogs = ref(
+	localStorage.getItem('searchLogs') ? JSON.parse(localStorage.getItem('searchLogs')) : []
+)
+const dataSource = ref({list: []})
 const searchOnFocus = ref(false)
 const showRecord = (flag) => {
 	searchOnFocus.value = flag
 }
 const delRecord = (index) => {
 	searchLogs.value.splice(index, 1)
-	console.log('del')
 }
 const goSearch = (keyword) => {
-	console.log(keyword)
+	if (! keyword) return
+	if (keyword.trim() == '') {
+		message.waning('请输入关键词')
+		return
+	}
+	searchLogs.value.unshift(keyword)
+	localStorage.setItem('searchLogs', JSON.stringify(searchLogs.value))
+	router.push({
+		path: '/product/list',
+		query: {
+			keyword
+		}
+	})
 }
-onMounted(() => {
+onMounted(async () => {
 	window.addEventListener('click', closeRecord)
+	const res = await getRecommend({
+		pageNo: '1',
+		pageSize: '9'
+	})
+	if (! res) return
+	dataSource.value = res.data
 })
 onBeforeUnmount(() => {
 	window.removeEventListener('click', closeRecord)
@@ -169,9 +163,6 @@ const goAccount = (type) => {
 	router.push('/account/' + type)
 }
 
-const pageNoChange = (pageNo) => {
-	console.log(pageNo)
-}
 const goNewStore = () => {
 	if (userInfoStore.userInfo.userId) {
 		router.push('/store/newStore')
@@ -366,6 +357,8 @@ main {
 			height: 100%;
 			background-color: $main-color;
 			border-radius: 10px;
+			background-size: cover;
+			background-image: url(../assets/1.jpg);
 		}
 
 		.user-info {

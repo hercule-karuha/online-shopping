@@ -2,7 +2,7 @@
 	<div>
 		<router-view v-slot="{ Component }">
 			<transition enter-active-class="animate__animated animate__fadeIn animate__faster">
-				<component :is="Component" />
+					<component :is="Component" />
 			</transition>
 		</router-view>
 		<nav>
@@ -16,7 +16,7 @@
 					<User />
 				</el-icon>
 			</div>
-			<div title="搜索">
+			<div title="搜索" @click="router.push('/product/list')">
 				<el-icon>
 					<Search />
 				</el-icon>
@@ -40,10 +40,11 @@
 	</div>
 </template>
 <script setup>
-import { watch, onMounted, nextTick } from 'vue'
-import { RouterView, useRouter } from 'vue-router'
+import { watch, onBeforeMount, nextTick } from 'vue'
+import { RouterView, useRouter, useRoute } from 'vue-router'
 import { useUserInfoStore } from '@/stores/userInfo.js'
 const router = useRouter()
+const route = useRoute()
 const userInfoStore = useUserInfoStore()
 let getUserInfoFunc = null
 const goTop = () => {
@@ -54,6 +55,10 @@ const goTop = () => {
 }
 watch(() => userInfoStore.needLogin, (val) => {
 	if (val) {
+		if (route.path === '/' || route.path.contains('/product/detail')){
+			userInfoStore.needLogin = false
+			return
+		}
 		router.push('/account/login')
 	}
 })
@@ -66,7 +71,7 @@ const goWithCheck = (path) => {
 		userInfoStore.needLogin = true
 	}
 }
-onMounted(async () => {
+onBeforeMount(async () => {
 	// await异步加载 requst.js 否则会提示没有use(pinia)
 	const { getUserInfo } = await import('@/api/user.js')
 	getUserInfoFunc = getUserInfo

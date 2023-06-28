@@ -1,15 +1,15 @@
 use axum::{
-    extract::{Multipart, Path, State},
-    response::Json,
+    extract::{Json, Multipart, Path, State},
+    response,
 };
 
-use axum_sessions::extractors::ReadableSession;
+use axum_sessions::extractors::{ReadableSession, WritableSession};
 
-use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool};
 use diesel::PgConnection;
+use diesel::{dsl::count_star, prelude::*};
 use diesel::{insert_into, update};
-use serde_json::{json, Value};
+use serde_json::{from_value, json, Value};
 
 use tokio::fs::File;
 use tokio::io::AsyncWriteExt;
@@ -20,7 +20,7 @@ use crate::error_return::*;
 
 pub async fn new_store(
     State(pool): State<Pool<ConnectionManager<PgConnection>>>,
-    session: ReadableSession,
+    mut session: WritableSession,
     mut multipart: Multipart,
 ) -> Json<Value> {
     use crate::schema::stores::dsl::*;
@@ -76,6 +76,11 @@ pub async fn new_store(
         .set(dsl::user_type.eq(1))
         .execute(conn)
         .expect("update fail");
+
+    session.insert("type", 1).expect("cannot store value");
+    session
+        .insert("store_id", s_info.as_ref().unwrap().store_id)
+        .expect("cannot store value");
 
     let path = "images/store_cover/".to_string() + &s_info.as_ref().unwrap().store_id.to_string();
     println!("{}", path);
@@ -176,17 +181,9 @@ pub async fn edit_store(
 
 pub async fn get_store_info(
     State(pool): State<Pool<ConnectionManager<PgConnection>>>,
-    session: ReadableSession,
     Path(id): Path<String>,
 ) -> Json<Value> {
     use crate::schema::stores::dsl::*;
-
-    match session.get::<i32>("id") {
-        Some(uid) => uid,
-        None => {
-            return no_login_error();
-        }
-    };
 
     let st_id = match id.parse::<i32>() {
         Ok(sid) => sid,
@@ -217,16 +214,9 @@ pub async fn get_store_info(
 
 pub async fn get_product_list(
     State(pool): State<Pool<ConnectionManager<PgConnection>>>,
-    session: ReadableSession,
     Json(payload): Json<Value>,
 ) -> Json<Value> {
     use crate::schema::products::dsl::*;
-    match session.get::<i32>("id") {
-        Some(id) => id,
-        None => {
-            return no_login_error();
-        }
-    };
 
     let st_id = match payload["storeId"].as_str() {
         Some(id) => id.parse::<i32>().unwrap(),
@@ -257,8 +247,14 @@ pub async fn get_product_list(
 
     let conn = &mut pool.get().unwrap();
 
+    let total = products
+        .select(count_star())
+        .filter(store_id.eq(st_id).and(delete_product.ne(1)))
+        .first::<i64>(conn)
+        .unwrap();
+
     let query = products
-        .filter(store_id.eq(st_id))
+        .filter(store_id.eq(st_id).and(delete_product.ne(1)))
         .offset((page_no * page_sz).into())
         .limit(page_sz.into());
 
@@ -292,10 +288,116 @@ pub async fn get_product_list(
         "msg": "请求成功",
         "data": {
             "pageSize": page_sz.to_string(), //一页的个数
-            "pageNo": page_no.to_string(), //页数
-            "pageCount": (result_vec.len() as i32/page_sz).to_string(), //总页数
-            "total": result_vec.len().to_string(), //总记录数
+            "pageNo": (page_no+1).to_string(), //页数
+            "pageCount": ((total / page_sz as i64) + (total % page_sz as i64> 0) as i64).to_string(), //总页数
+            "total": total.to_string(), //总记录数
             "list":result_vec,
         },
+    }))
+}
+
+pub async fn get_sale_order(
+    State(pool): State<Pool<ConnectionManager<PgConnection>>>,
+    session: ReadableSession,
+    Json(payload): Json<Value>,
+) -> response::Json<Value> {
+    use crate::schema::orders::dsl::*;
+    match session.get::<i32>("id") {
+        Some(id) => id,
+        None => {
+            return no_login_error();
+        }
+    };
+
+    match session.get::<i32>("type") {
+        Some(1) => {}
+        _ => {
+            println!("wrong user_type");
+            return parameter_error();
+        }
+    };
+    let st_id = match session.get::<i32>("store_id") {
+        Some(s_id) => s_id,
+        _ => {
+            return server_error();
+        }
+    };
+    let mut resvec: Vec<Value> = Vec::new();
+
+    let request_data: PageInfo = match from_value(payload) {
+        Ok(data) => data,
+        Err(error) => {
+            eprintln!("Failed to parse JSON: {}", error);
+            return response::Json(json!({
+                "code": 400,
+                "message": "Invalid JSON format"
+            }));
+        }
+    };
+
+    let p_size = match request_data.pageSize.parse::<i32>() {
+        Ok(sz) => sz,
+        Err(_) => {
+            return parameter_error();
+        }
+    };
+
+    let p_no = match request_data.pageNo.parse::<i32>() {
+        Ok(sz) => sz,
+        Err(_) => {
+            return parameter_error();
+        }
+    };
+
+    let conn = &mut pool.get().unwrap();
+
+    let total = match orders
+        .select(count_star())
+        .filter(store_id.eq(st_id))
+        .first::<i64>(conn)
+    {
+        Ok(all) => all,
+        Err(_) => {
+            return server_error();
+        }
+    };
+
+    let usr_orders = match orders
+        .select(OrderInfo::as_select())
+        .offset((p_size * (p_no - 1)) as i64)
+        .limit(p_size.into()).order(order_id.desc())
+        .filter(store_id.eq(st_id))
+        .get_results(conn)
+    {
+        Ok(rev_vec) => rev_vec,
+        Err(_) => {
+            return server_error();
+        }
+    };
+
+    for u_order in usr_orders.iter() {
+        resvec.push(json!({
+            "orderId":u_order.order_id.to_string(),
+            "productId":u_order.product_id.unwrap().to_string(),
+            "productName":u_order.product_name.clone().unwrap(),
+            "price":u_order.total_price.unwrap().to_string(),
+            "num":u_order.quantity.unwrap().to_string(),
+            "time":u_order.purchase_time.unwrap().to_string(),
+            "sendAddress":u_order.store_address.clone().unwrap(),
+            "receiveAddress":u_order.user_address.clone().unwrap(),
+            "phone":u_order.user_phone.clone().unwrap(),
+        }))
+    }
+
+    response::Json(json!({
+        "code": 200,
+        "msg": "请求成功",
+        "data": {
+            "pageSize":p_size,
+            "pageNo":p_no,
+            "pageCount":(total / p_size as i64).to_string(),
+            "total":total.to_string(),
+            "list":resvec
+        }
     }))
 }

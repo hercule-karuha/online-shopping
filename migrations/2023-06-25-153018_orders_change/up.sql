@@ -1,6 +1,6 @@
 -- Your SQL goes here
 alter table orders
-    add store_address varchar(100);
+    add store_address varchar(1000);
 alter table orders
     add store_id integer;
 alter table orders

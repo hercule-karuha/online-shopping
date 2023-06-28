@@ -1,35 +1,61 @@
 <template>
-	<main>
-		<div class="cover">
-			<img :src="data.cover" alt="">
+	<div class="product-item"> 
+		<div class="cover" @click="goDetail(data.productId)">
+			<img :src="proxy.globalInfo.productCoverUrl+data.productId" alt="">
 		</div>
 		<div class="info">
-			<div class="name">
-				{{ data.name }}
+			<div @click="goDetail(data.productId)" class="name">
+				{{ data.productName }}
+			</div>
+			<div class="edit" v-if="showEdit" >
+				<span @click="goEdit(data.productId)"><el-icon><Edit /></el-icon>编辑商品</span>
+				<span @click="deleteProduct(data.productId)">删除</span>
 			</div>
 			<div class="sales" v-if="data.sales">
 				总销量: <span>{{ data.sales }}</span>
+				
 			</div>
 			<div class="price">
-				¥ {{ data.price }}
+				¥ {{ Number.parseFloat(data.price).toFixed(2) }}
 			</div>
 		</div>
-	</main>
+	</div>
 </template>
 
 <script setup>
+import { getCurrentInstance } from 'vue'
+import { useRouter } from 'vue-router'
+import { useUserInfoStore } from '@/stores/userInfo.js'
+const userInfoStore = useUserInfoStore()
+const router = useRouter()
+const { proxy } = getCurrentInstance()
 const props = defineProps({
 	data: {
 		type: Object,
 		default: () => { }
+	},
+	showEdit: {
+		type: Boolean,
+		default: false
 	}
 })
+const emit = defineEmits(['delProduct'])
+const goEdit = (productId) => {
+	router.push('/product/edit/' + productId)
+}
+const deleteProduct = (productId) => {
+	emit('delProduct', productId)
+}
+const goDetail = (productId) => {
+	window.open('/product/detail/' + productId, '_blank')
+}
 </script>
 
 <style scoped lang="scss">
-main {
+.product-item {
 	max-width: 340px;
 	height: 180px;
+	margin: 20px;
 	display: flex;
 	justify-content: space-between;
 	padding: 10px;
@@ -47,7 +73,7 @@ main {
 	.cover {
 		width: 160px;
 		height: 160px;
-
+		margin-right: 20px;
 		img {
 			width: 100%;
 			height: 100%;
@@ -72,6 +98,20 @@ main {
 			&:hover {
 				color: rgb(255, 106, 106)
 			}
+		}
+		.edit{
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			span{
+				display: flex;
+				align-items: center;
+				cursor: pointer;
+				&:hover{
+					color: var(--main-color-purple);
+				}
+			}
+			
 		}
 		.sales {
 			font-size: 14px;

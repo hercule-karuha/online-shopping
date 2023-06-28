@@ -11,6 +11,7 @@ use diesel::PgConnection;
 use diesel::{insert_into, update};
 use serde_json::{json, Value};
 
+use tokio::fs::write;
 use tokio::fs::File;
 use tokio::io::AsyncWriteExt;
 
@@ -108,7 +109,7 @@ pub async fn new_product(
         "code": 200,
         "msg": "请求成功",
         "data": {
-            "product_id": pro_id.unwrap().to_string(),//用户id
+            "productId": pro_id.unwrap().to_string(),//用户id
         },
     }))
 }
@@ -131,7 +132,7 @@ pub async fn edit_product(
             return parameter_error();
         }
     };
-    let mut new_prod = Product::new(None);
+    let mut new_prod = ProductIns::new(None);
     let mut prod_id = 0;
 
     while let Some(field) = multipart.next_field().await.unwrap() {
@@ -164,15 +165,23 @@ pub async fn edit_product(
             "cover" => {
                 let data = field.bytes().await.unwrap();
                 if !data.is_empty() {
+                    println!("get cover of {}",prod_id);
                     let path = "images/products_cover/".to_string() + &prod_id.to_string();
-                    let mut file = match File::create(path).await {
-                        Ok(fe) => fe,
-                        Err(error) => {
-                            println!("{}", error);
-                            return server_error();
-                        }
-                    };
-                    file.write_all(&data).await.expect("write error");
+
+                    if let Err(err) = write(path, &data).await {
+                        eprintln!("Failed to write file: {}", err);
+                    } else {
+                        println!("File overwritten successfully.");
+                    }
+
+                    // let mut file = match File::create(path).await {
+                    //     Ok(fe) => fe,
+                    //     Err(error) => {
+                    //         println!("{}", error);
+                    //         return server_error();
+                    //     }
+                    // };
+                    // file.write(&data).await.expect("write error");
                 }
             }
             "productId" => {
@@ -205,22 +214,18 @@ pub async fn edit_product(
             "msg": "修改成功",
             "data": null
         })),
-        Err(_) => server_error(),
+        Err(err) => {
+            println!("err: {}", err.to_string());
+            server_error()
+        }
     }
 }
 
 pub async fn get_product_info(
     State(pool): State<Pool<ConnectionManager<PgConnection>>>,
-    session: ReadableSession,
     Path(id): Path<String>,
 ) -> Json<Value> {
     use crate::schema::products::dsl::*;
-    match session.get::<i32>("id") {
-        Some(_) => {}
-        None => {
-            return no_login_error();
-        }
-    };
 
     let prod_id = match id.parse::<i32>() {
         Ok(pid) => pid,
@@ -249,23 +254,21 @@ pub async fn get_product_info(
             "price" : prod.price.unwrap().to_string(),
             "sales" : prod.sales.unwrap().to_string(),
             "stock" : prod.stock.unwrap().to_string(),
-            "address" : prod.store_address.unwrap()
+            "address" : prod.store_address.unwrap(),
+            "canbuy" : match prod.delete_product {
+                Some(1) =>"0",
+                _=>"1"
+            }
         },
     }))
 }
 
 pub async fn get_recommend(
     State(pool): State<Pool<ConnectionManager<PgConnection>>>,
-    session: ReadableSession,
     Json(payload): Json<Value>,
 ) -> Json<Value> {
     use crate::schema::products::dsl::*;
-    match session.get::<i32>("id") {
-        Some(id) => id,
-        None => {
-            return no_login_error();
-        }
-    };
+
 
     let page_no = match payload["pageNo"].as_str() {
         Some(pn) => pn.parse::<i32>().unwrap() - 1,
@@ -282,33 +285,76 @@ pub async fn get_recommend(
 
     let mut result_vec: Vec<Value> = Vec::new();
     let conn = &mut pool.get().unwrap();
+
     let results = products
         .offset((page_no * page_sz).into())
         .limit(page_sz.into())
+        .filter(delete_product.ne(1))
         .order(sales.asc())
         .select(Product::as_select())
         .get_results::<Product>(conn);
 
-        if let Ok(resvec) = results {
-            for prod in resvec.iter() {
-                result_vec.push(json!({
-                    "productId": prod.product_id.to_string(),
-                    "productName": prod.name.clone().unwrap(),
-                    "price": prod.price.unwrap().to_string(),
-                    "sales": prod.sales.unwrap().to_string(),
-                }))
-            }
+    if let Ok(resvec) = results {
+        for prod in resvec.iter() {
+            result_vec.push(json!({
+                "productId": prod.product_id.to_string(),
+                "productName": prod.name.clone().unwrap(),
+                "price": prod.price.unwrap().to_string(),
+                "sales": prod.sales.unwrap().to_string(),
+            }))
         }
-    
-        Json(json!({
+    }
+
+    Json(json!({
+        "code": 200,
+        "msg": "请求成功",
+        "data": {
+            "pageSize": page_sz.to_string(), //一页的个数
+            "pageNo": "1", //页数
+            "pageCount": "1", //总页数
+            "total": result_vec.len().to_string(), //总记录数
+            "list":result_vec,
+        },
+    }))
+}
+
+pub async fn remove_product(
+    State(pool): State<Pool<ConnectionManager<PgConnection>>>,
+    session: ReadableSession,
+    Json(payload): Json<Value>,
+) -> Json<Value> {
+    use crate::schema::products::dsl::*;
+    match session.get::<i32>("id") {
+        Some(_) => {}
+        None => {
+            return no_login_error();
+        }
+    };
+    match session.get::<i32>("type") {
+        Some(1) => {}
+        _ => {
+            return parameter_error();
+        }
+    };
+    let prod_id = payload["productId"]
+        .as_str()
+        .unwrap()
+        .to_string()
+        .parse::<i32>()
+        .unwrap();
+
+    let conn = &mut pool.get().unwrap();
+
+    match update(products)
+        .set(delete_product.eq(1))
+        .filter(product_id.eq(prod_id))
+        .execute(conn)
+    {
+        Ok(_) => Json(json!({
             "code": 200,
-            "msg": "请求成功",
-            "data": {
-                "pageSize": page_sz.to_string(), //一页的个数
-                "pageNo": page_no.to_string(), //页数
-                "pageCount": (result_vec.len() as i32/page_sz).to_string(), //总页数
-                "total": result_vec.len().to_string(), //总记录数
-                "list":result_vec,
-            },
-        }))
+            "msg": "修改成功",
+            "data": null
+        })),
+        Err(_) => server_error(),
+    }
 }

@@ -2,11 +2,11 @@
 	<div class="content">
 		<main>
 			<div class="cover">
-				<img :src="productInfo.cover" alt="">
+				<img :src="productInfo.productId ? proxy.globalInfo.productCoverUrl + productInfo.productId : ''" alt="">
 			</div>
 			<div class="purchase-info">
 				<div class="name">
-					{{ productInfo.name }}
+					{{ productInfo.productName }}
 				</div>
 				<div class="sales info-item">
 					<span class="label">销量</span>
@@ -18,7 +18,7 @@
 				</div>
 				<div class="description info-item">
 					<span class="label">描述</span>
-					<span class="info">{{ productInfo.descriton }}</span>
+					<span class="info">{{ productInfo.description }}</span>
 				</div>
 				<div class="address info-item">
 					<span class="label">发货</span>
@@ -32,20 +32,21 @@
 					<el-input-number v-model="num" :min="1" :max="productInfo.stock" />
 				</div>
 				<div class="purchase">
-					<button>立即购买</button>
-					<button>加入购物车</button>
+					<button :class="[productInfo.canbuy == '0' ? 'canot' : '']" @click="handlePurchase">{{ productInfo.canbuy ==
+						'0' ? '已下架' : '立即购买' }}</button>
+					<button v-if="productInfo.canbuy == '1'" @click="add2ShoppingCart">加入购物车</button>
 				</div>
 			</div>
 		</main>
-		<div class="store" >
+		<div class="store" :style="{ 'background-image': 'url(' + proxy.globalInfo.storeCoverUrl + productInfo.storeId + ')' }">
 			<div class="bg">
 				<div class="store-cover">
-					<img src="https://pic.imgdb.cn/item/63f8d55bf144a01007fe3722.jpg" alt="">
+					<img :src="productInfo.storeId ? proxy.globalInfo.storeCoverUrl + productInfo.storeId : ''" alt="">
 				</div>
 				<div class="store-info">
-					{{ productInfo.storeName }}
+					{{ storeInfo.name }}
 				</div>
-				<button>进店逛逛</button>
+				<button @click="router.push('/store/detail/' + productInfo.storeId)">进店逛逛</button>
 			</div>
 		</div>
 		<div class="detail">
@@ -53,47 +54,84 @@
 				<el-tab-pane label="商品详情" name="details">
 					<div class="detail-images">
 						<div v-for="(item, index) in detailImages" :key="index" class="detail-image">
-							<img :src="item" alt="">
+							<img :src="proxy.globalInfo.imgUrl + item" alt="">
 						</div>
 					</div>
 				</el-tab-pane>
-				<el-tab-pane label="Config" name="second">
+				<!-- <el-tab-pane label="Config" name="second">
 					Config
-				</el-tab-pane>
+				</el-tab-pane> -->
 			</el-tabs>
 		</div>
 	</div>
 </template>
 
 <script setup>
-import { useRoute } from 'vue-router'
-import { ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { ref, watch, getCurrentInstance, onBeforeUnmount, onMounted } from 'vue'
+import { getProduct } from '@/api/product.js'
+import { getStoreInfo } from '@/api/store.js'
+import { parseAddressCodeArr } from '@/utils/tools'
+import { addShoppingCart } from '@/api/purchase.js'
+import { usePurchaseListStore } from '@/stores/purchaseList.js'
+import message from '@/utils/message.js'
+const purchaseListStore = usePurchaseListStore()
+const { proxy } = getCurrentInstance()
 const route = useRoute()
-const productId = ref(route.params.id)
-watch(() => route.params.id, (val) => {
-	productId.value = val
+const detailImages = ref([])
+const storeInfo = ref({})
+onMounted(async () => {
+	const res = await getProduct(route.params.id)
+	if (!res) {
+		return
+	}
+	productInfo.value = res.data
+	detailImages.value = res.data.detailImages.split(',')
+	const address = JSON.parse(res.data.address)
+	productInfo.value.stock = Number.parseInt(productInfo.value.stock)
+	productInfo.value.address = parseAddressCodeArr(address.codeArr).join('  ') + address.detailAddress
+	getStoreInfo(res.data.storeId).then(res => {
+		storeInfo.value = res.data
+	})
 })
-const productInfo = {
-	productId: 1,
-	cover: 'https://pic.imgdb.cn/item/64475b180d2dde5777857756.webp',
-	name: 'XXxxxxxxxxxxxxXXXXXXXXXXX',
-	descriton: 'xxxxxxxxxxxxxxxxxxxxx xwewxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
-	price: 100,
-	storeName: 'XX商城',
-	storeId: 1,
-	address: '北京市朝阳区，XX街道，XX小区，XX号楼，XX单元，XX室',
-	sales: 100,
-	stock: 100,
-	detailImages: `https://pic.imgdb.cn/item/64475aff0d2dde577785597a.jpg,
-    https://pic.imgdb.cn/item/63fb0486f144a01007e0e1f1.jpg,
-    https://pic.imgdb.cn/item/63f7abaaf144a0100735172d.jpg`
-}
-const detailImages = productInfo.detailImages.split(',')
+
+const router = useRouter()
+const productInfo = ref({})
+
 const handleClick = (panel) => {
 	console.log(panel)
 }
 const activeName = ref('details')
 const num = ref(1)
+
+const handlePurchase = () => {
+	if (productInfo.value.canbuy == '0') {
+		return
+	}
+	purchaseListStore.add({
+		productId: productInfo.value.productId,
+		num: num.value,
+		price: productInfo.value.price,
+		name: productInfo.value.name,
+	})
+
+	router.push('/purchase')
+}
+const add2ShoppingCart = async () => {
+	let request = {
+		list: [
+			{
+				productId: productInfo.value.productId,
+				num: num.value.toString()
+			}
+		]
+	}
+	const res = await addShoppingCart(request)
+	if (!res) {
+		return
+	}
+	message.success('添加成功')
+}
 </script>
 
 <style scoped lang="scss">
@@ -197,26 +235,28 @@ const num = ref(1)
 		border-radius: 20px;
 		background-size: cover;
 		overflow: hidden;
-		background-image: url('https://pic.imgdb.cn/item/63f8d55bf144a01007fe3722.jpg');
+
 		.bg {
 			padding: 20px;
 			display: flex;
 			backdrop-filter: blur(5px);
 			position: relative;
+
 			&::after {
 				content: '';
 				position: absolute;
-				background-image: linear-gradient(to right , transparent 0%, #ffffff 50%);
+				background-image: linear-gradient(to right, transparent 0%, #ffffff 50%);
 				height: 100%;
 				width: 100%;
 				top: 0;
 				left: 0;
 				z-index: -1;
 			}
+
 			.store-cover {
 				height: 100px;
 				width: 100px;
-				
+
 				img {
 					height: 100%;
 					width: 100%;
@@ -232,6 +272,7 @@ const num = ref(1)
 				align-items: center;
 				letter-spacing: 10px;
 				position: relative;
+
 				// cursor: none;
 				&::after {
 					transition: all 0.3s ease;
@@ -243,6 +284,7 @@ const num = ref(1)
 					bottom: 20px;
 					left: -4px;
 				}
+
 				&:hover {
 					&::after {
 						width: 100%;
@@ -279,8 +321,10 @@ const num = ref(1)
 
 		.detail-images {
 			margin: 20px;
+
 			.detail-image {
 				margin-bottom: 20px;
+
 				img {
 					width: 100%;
 					object-fit: cover;
@@ -289,4 +333,7 @@ const num = ref(1)
 		}
 	}
 }
-</style>
+
+.canot {
+	background-color: #ddd !important;
+}</style>

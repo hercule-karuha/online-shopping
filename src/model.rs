@@ -1,5 +1,6 @@
+use chrono::NaiveDateTime;
 use diesel::prelude::*;
-use serde::{Deserialize};
+use serde::Deserialize;
 #[derive(Queryable, Selectable)]
 #[diesel(table_name = crate::schema::users)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
@@ -31,6 +32,17 @@ impl UpdateUser {
             address: None,
         }
     }
+}
+
+#[derive(Queryable, Selectable)]
+#[diesel(table_name = crate::schema::users)]
+pub struct UserDetail {
+    pub user_id: i32,
+    pub user_name: Option<String>,
+    pub gender: Option<i32>,
+    pub phone: Option<String>,
+    pub address: Option<String>,
+    pub user_type: Option<i32>,
 }
 
 #[derive(Queryable, Selectable, AsChangeset)]
@@ -66,6 +78,7 @@ pub struct Product {
     pub stock: Option<i32>,
     pub sales: Option<i32>,
     pub store_address: Option<String>,
+    pub delete_product: Option<i32>,
 }
 
 impl Product {
@@ -80,11 +93,12 @@ impl Product {
             stock: None,
             sales: Some(0),
             store_address: None,
+            delete_product: None,
         }
     }
 }
 
-#[derive(Insertable,AsChangeset, Queryable, Selectable)]
+#[derive(Insertable, AsChangeset, Queryable, Selectable)]
 #[diesel(table_name = crate::schema::products)]
 pub struct ProductIns {
     pub store_id: Option<i32>,
@@ -95,6 +109,7 @@ pub struct ProductIns {
     pub stock: Option<i32>,
     pub sales: Option<i32>,
     pub store_address: Option<String>,
+    pub delete_product: Option<i32>,
 }
 
 impl ProductIns {
@@ -108,6 +123,7 @@ impl ProductIns {
             stock: None,
             sales: Some(0),
             store_address: None,
+            delete_product: Some(0)
         }
     }
 }
@@ -119,6 +135,29 @@ pub struct ProductOrderInfo {
     pub price: Option<f64>,
     pub store_id: Option<i32>,
     pub store_address: Option<String>,
+    pub name: Option<String>,
+}
+#[derive(Queryable, Selectable)]
+#[diesel(table_name = crate::schema::shopping_carts)]
+pub struct CartInfo {
+    pub user_id: i32,
+    pub product_id: i32,
+    pub quantity: Option<i32>,
+}
+
+#[derive(Queryable, Selectable)]
+#[diesel(table_name = crate::schema::orders)]
+pub struct OrderInfo {
+    pub order_id: i32,
+    pub store_id: Option<i32>,
+    pub product_id: Option<i32>,
+    pub product_name: Option<String>,
+    pub quantity: Option<i32>,
+    pub total_price: Option<f64>,
+    pub store_address: Option<String>,
+    pub user_address: Option<String>,
+    pub purchase_time: Option<NaiveDateTime>,
+    pub user_phone: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -136,6 +175,22 @@ pub struct PurRequestData {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct CartRequestData{
+pub struct CartRequestData {
     pub list: Vec<ProductInfo>,
+}
+
+#[derive(Debug, Deserialize)]
+#[allow(warnings)]
+pub struct PageInfo {
+    pub pageSize: String,
+    pub pageNo: String,
+}
+
+#[derive(Debug, Deserialize)]
+#[allow(warnings)]
+pub struct SearchInfo {
+    pub keyword: String,
+    pub storeId: String,
+    pub pageSize: String,
+    pub pageNo: String,
 }
