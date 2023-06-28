@@ -20,3 +20,19 @@ export const getRecommend = (data) => {
         data
     })
 }
+
+export const editProduct = (data) => {
+    return request({
+        url: '/product/editProduct',
+        method: 'post',
+        data
+    })
+}
+
+export const deleteProduct = (data) => {
+    return request({
+        url: '/product/deleteProduct',
+        method: 'post',
+        data
+    })
+}

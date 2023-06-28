@@ -25,9 +25,12 @@ const route = useRoute()
 const router = useRouter()
 const keyword = ref('')
 const dataSource = ref({
+    total: 0,
+    pageCount: 0,
     list: []
 })
 onMounted(async() => {
+    if (!route.query.keyword) return
     keyword.value = route.query.keyword
     const res = await  searchProduct({
         keyword: keyword.value,
@@ -42,6 +45,7 @@ onMounted(async() => {
 
 watch(() => route.query.keyword, async (val) => {
     keyword.value = val
+    if (!val) return
     const res = await  searchProduct({
         keyword: keyword.value,
         pageNo: '1',
@@ -52,7 +56,6 @@ watch(() => route.query.keyword, async (val) => {
     dataSource.value = res.data
 })
 const search = async () => {
-    console.log(keyword.value)
     if (!keyword.value || keyword.value.trim() == '') {
         message.warning('请输入关键字')
         return

@@ -1,0 +1,1 @@
+import{d as s}from"./element-china-area-data-7e4514d6.js";const c=r=>new Promise((n,o)=>{const e=new FileReader;e.readAsDataURL(r),e.onload=function(){n(e.result)},e.onerror=function(t){o(t)}}),i=r=>{const n=s[r[0]],o=s[r[1]],e=s[r[2]];return[n,o,e]};export{c as b,i as p};

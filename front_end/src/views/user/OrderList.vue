@@ -51,7 +51,12 @@ onMounted(async () => {
     dataSource.value = res.data
     dataSource.value.list.forEach((item) => {
         item.sendAddress = JSON.parse(item.sendAddress)
-        item.sendAddress = item.sendAddress.areaArr.join('  ') 
+        if (item.sendAddress.areaArr) {
+            item.sendAddress.areaArr = parseAddressCodeArr(item.sendAddress.areaArr)
+        } else {
+            item.sendAddress.areaArr = []
+        }
+        item.sendAddress = item.sendAddress.areaArr.join('  ') + '  ' + item.sendAddress.detailAddress
         item.receiveAdress = item.receiveAddress + '  ' + item.phone
     })
 })
@@ -131,9 +136,7 @@ main {
                 }
             }
             transition: all 0.3s;
-            .center{
-                // background-color: var(--main-color-purple-hover);
-            }
+    
             .buttom{
                 padding-left: 30px;
                 padding-bottom: 10px;

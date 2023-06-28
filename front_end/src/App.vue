@@ -16,7 +16,7 @@
 					<User />
 				</el-icon>
 			</div>
-			<div title="搜索">
+			<div title="搜索" @click="router.push('/product/list')">
 				<el-icon>
 					<Search />
 				</el-icon>
@@ -41,9 +41,10 @@
 </template>
 <script setup>
 import { watch, onBeforeMount, nextTick } from 'vue'
-import { RouterView, useRouter } from 'vue-router'
+import { RouterView, useRouter, useRoute } from 'vue-router'
 import { useUserInfoStore } from '@/stores/userInfo.js'
 const router = useRouter()
+const route = useRoute()
 const userInfoStore = useUserInfoStore()
 let getUserInfoFunc = null
 const goTop = () => {
@@ -54,6 +55,10 @@ const goTop = () => {
 }
 watch(() => userInfoStore.needLogin, (val) => {
 	if (val) {
+		if (route.path === '/'){
+			userInfoStore.needLogin = false
+			return
+		}
 		router.push('/account/login')
 	}
 })

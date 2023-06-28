@@ -29,7 +29,7 @@ const props = defineProps({
 const goUserCenter = () => {
 	if (props.addLink) {
 		router.push({
-			path: '/userCenter',
+			path: '/user',
 			query: {
 				userId: props.userId
 			}

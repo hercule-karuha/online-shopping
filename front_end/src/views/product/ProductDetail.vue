@@ -2,11 +2,11 @@
 	<div class="content">
 		<main>
 			<div class="cover">
-				<img :src="proxy.globalInfo.productCoverUrl+productInfo.productId" alt="">
+				<img :src="productInfo.productId?proxy.globalInfo.productCoverUrl+productInfo.productId:''" alt="">
 			</div>
 			<div class="purchase-info">
 				<div class="name">
-					{{ productInfo.name }}
+					{{ productInfo.productName }}
 				</div>
 				<div class="sales info-item">
 					<span class="label">销量</span>
@@ -40,10 +40,10 @@
 		<div class="store" :style="{'background-image': 'url('+ proxy.globalInfo.storeCoverUrl+productInfo.storeId+')'}">
 			<div class="bg">
 				<div class="store-cover">
-					<img :src="proxy.globalInfo.storeCoverUrl+productInfo.storeId" alt="">
+					<img :src="productInfo.storeId?proxy.globalInfo.storeCoverUrl+productInfo.storeId:''" alt="">
 				</div>
 				<div class="store-info">
-					{{ productInfo.storeName }}
+					{{ storeInfo.name }}
 				</div>
 				<button @click="router.push('/store/detail/'+productInfo.storeId)">进店逛逛</button>
 			</div>
@@ -69,6 +69,7 @@
 import { useRoute, useRouter } from 'vue-router'
 import { ref, watch, getCurrentInstance } from 'vue'
 import { getProduct } from '@/api/product.js'
+import { getStoreInfo } from '@/api/store.js'
 import { parseAddressCodeArr } from '@/utils/tools'
 import { addShoppingCart } from '@/api/purchase.js'
 import { usePurchaseListStore } from '@/stores/purchaseList.js'
@@ -77,6 +78,7 @@ const purchaseListStore = usePurchaseListStore()
 const { proxy } = getCurrentInstance()
 const route = useRoute()
 const detailImages = ref([])
+const storeInfo = ref({})
 watch(() => route.params.id, (val) => {
 	if (!val) {
 		return
@@ -86,7 +88,10 @@ watch(() => route.params.id, (val) => {
 		detailImages.value = res.data.detailImages.split(',')
 		const address = JSON.parse(res.data.address)
 		productInfo.value.stock = Number.parseInt(productInfo.value.stock)
-		productInfo.value.address = parseAddressCodeArr(address.codeArr).join('  ') + address.detailAddress 
+		productInfo.value.address = parseAddressCodeArr(address.codeArr).join('  ') + address.detailAddress
+		getStoreInfo(res.data.storeId).then(res => {
+			storeInfo.value = res.data
+		})
 	})
 }, {immediate :true})
 const router = useRouter()

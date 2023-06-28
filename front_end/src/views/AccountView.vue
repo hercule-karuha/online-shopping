@@ -9,14 +9,14 @@
 					<input v-model="formData.userName" type="text" placeholder="用户名">
 				</div>
 				<div class="password">
-					<input ref="passwordRef" v-model="formData.password" type="password" placeholder="密码">
+					<input @keyup.enter="loginOrRegister" ref="passwordRef" v-model="formData.password" type="password" placeholder="密码">
 					<el-icon v-if="formData.password && formData.password.length > 0" @click="switchPwdView('password')">
 						<View />
 					</el-icon>
 					<!-- <el-icon><Hide /></el-icon> -->
 				</div>
 				<div v-if="accountType === 'register'" class="password">
-					<input v-model="formData.confirmPassword" type="password" ref="confirmPasswordRef" placeholder="确认密码">
+					<input @keyup.enter="loginOrRegister" v-model="formData.confirmPassword" type="password" ref="confirmPasswordRef" placeholder="确认密码">
 					<el-icon v-if="formData.confirmPassword && formData.confirmPassword.length > 0"
 						@click="switchPwdView('confirmPassword')">
 						<View />

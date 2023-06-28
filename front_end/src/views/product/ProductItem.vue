@@ -7,11 +7,16 @@
 			<div @click="router.push('/product/detail/' + data.productId)" class="name">
 				{{ data.productName }}
 			</div>
+			<div class="edit" v-if="showEdit" >
+				<span @click="goEdit(data.productId)"><el-icon><Edit /></el-icon>编辑商品</span>
+				<span @click="deleteProduct(data.productId)">删除</span>
+			</div>
 			<div class="sales" v-if="data.sales">
 				总销量: <span>{{ data.sales }}</span>
+				
 			</div>
 			<div class="price">
-				¥ {{ data.price }}
+				¥ {{ Number.parseFloat(data.price).toFixed(2) }}
 			</div>
 		</div>
 	</div>
@@ -20,14 +25,27 @@
 <script setup>
 import { getCurrentInstance } from 'vue'
 import { useRouter } from 'vue-router'
+import { useUserInfoStore } from '@/stores/userInfo.js'
+const userInfoStore = useUserInfoStore()
 const router = useRouter()
 const { proxy } = getCurrentInstance()
 const props = defineProps({
 	data: {
 		type: Object,
 		default: () => { }
+	},
+	showEdit: {
+		type: Boolean,
+		default: false
 	}
 })
+const emit = defineEmits(['delProduct'])
+const goEdit = (productId) => {
+	router.push('/product/edit/' + productId)
+}
+const deleteProduct = (productId) => {
+	emit('delProduct', productId)
+}
 </script>
 
 <style scoped lang="scss">
@@ -77,6 +95,20 @@ const props = defineProps({
 			&:hover {
 				color: rgb(255, 106, 106)
 			}
+		}
+		.edit{
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			span{
+				display: flex;
+				align-items: center;
+				cursor: pointer;
+				&:hover{
+					color: var(--main-color-purple);
+				}
+			}
+			
 		}
 		.sales {
 			font-size: 14px;

@@ -52,7 +52,7 @@
         :sub-title="timeout + '秒后返回购物车'"
       >
         <template #extra>
-          <el-button type="primary" @click="router.replace('/user')">立即返回</el-button>
+          <el-button type="primary" @click="back4end">立即返回</el-button>
         </template>
       </el-result>
       <DialogModule :show="dialogConfig.show" :title="dialogConfig.title" :buttons="dialogConfig.buttons"
@@ -92,7 +92,7 @@ const formDataRef = ref(null)
 const formData = ref({})
 const totalPrice = ref(0)
 const router = useRouter()
-
+let intervalId = null
 const purchaseSuccess = ref(false)
 const timeout = ref(5)
 
@@ -128,7 +128,8 @@ watch(purchaseListStore.list, (newVal) => {
     })
 }, {immediate: true})
 onBeforeUnmount(() => {
-    purchaseListStore.list = []  
+    purchaseListStore.list = []
+    clearInterval(intervalId)
 })
 const selectedAddress = ref(addressList.value[0])
 const dialogConfig = reactive({
@@ -218,15 +219,19 @@ const submit = async () => {
     message.success('提交订单成功')
 
     purchaseSuccess.value = true
-    const id = setInterval(() => {
+    intervalId = setInterval(() => {
         timeout.value--
         if (timeout.value === 0) {
-            clearInterval(id)
+            clearInterval(intervalId)
             router.replace('/user')
             
         }
     }, 1000)
     // 发送请求提交订单
+}
+const back4end = () => {
+    clearInterval(intervalId)
+    router.replace('/user')
 }
 </script>
 

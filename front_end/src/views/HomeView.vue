@@ -55,11 +55,11 @@
 						</div>
 					</div>
 					<div class="func">
-						<div>
+						<div @click="router.push('/user/shoppingCart')">
 							<el-icon>
 								<ShoppingCart />
 							</el-icon>
-							<span @click="router.push('/user/shoppingCart')">购物车</span>
+							<span >购物车</span>
 						</div>
 						<!-- <div>
 							<el-icon>
@@ -67,17 +67,17 @@
 							</el-icon>
 							<span>买过的店</span>
 						</div> -->
-						<div>
+						<div @click="router.push('/user/order')"> 
 							<el-icon>
 								<Clock />
 							</el-icon>
-							<span @click="router.push('/user/order')">购买记录</span>
+							<span >购买记录</span>
 						</div>
-						<div>
+						<div  @click="router.push('/user/stores')">
 							<el-icon>
 								<TakeawayBox />
 							</el-icon>
-							<span @click="router.push('/user/stores')">我的店铺</span>
+							<span>我的店铺</span>
 						</div>
 					</div>
 				</div>
@@ -363,7 +363,7 @@ main {
 			background-color: $main-color;
 			border-radius: 10px;
 			background-size: cover;
-			background-image: url(https://pic.imgdb.cn/item/6458e0420d2dde5777dfb709.jpg);
+			background-image: url('./1.jpg');
 		}
 
 		.user-info {
