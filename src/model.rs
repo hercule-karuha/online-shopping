@@ -194,3 +194,12 @@ pub struct SearchInfo {
     pub pageSize: String,
     pub pageNo: String,
 }
+
+
+#[derive(Debug, Deserialize)]
+#[allow(warnings)]
+pub struct SearchOrderInfo {
+    pub keyword: String,
+    pub pageSize: String,
+    pub pageNo: String,
+}

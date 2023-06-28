@@ -149,7 +149,7 @@ pub async fn login(
             "data": null,
         })),
         Ok(usr) => {
-            if md5_password == format!("{:x}", md5::compute(usr.password.unwrap())) {
+            if md5_password != format!("{:x}", md5::compute(usr.password.unwrap())) {
                 response::Json(json!({
                     "code": 600,
                     "msg": "密码错误",
@@ -234,7 +234,7 @@ pub async fn get_user_info(session: WritableSession) -> response::Json<Value> {
 
 pub async fn get_user_detail(
     State(pool): State<Pool<ConnectionManager<PgConnection>>>,
-    session: ReadableSession,
+    session: WritableSession,
 ) -> response::Json<Value> {
     use crate::schema::users::dsl::*;
     let usr_id = match session.get::<i32>("id") {
@@ -275,7 +275,7 @@ pub async fn get_user_detail(
 
 pub async fn edit_user(
     State(pool): State<Pool<ConnectionManager<PgConnection>>>,
-    session: ReadableSession,
+    mut session: WritableSession,
     mut multipart: Multipart,
 ) -> response::Json<Value> {
     use crate::schema::users::dsl::*;
@@ -287,6 +287,7 @@ pub async fn edit_user(
     };
 
     let mut edit_usr = UpdateUser::new(usr_id);
+    let mut new_sex = 0;
     while let Some(field) = multipart.next_field().await.unwrap() {
         match field.name().unwrap().to_string().as_str() {
             "userName" => {
@@ -295,14 +296,17 @@ pub async fn edit_user(
             "gender" => match field.text().await.unwrap().as_str() {
                 "0" => {
                     edit_usr.gender = Some(0);
+                    new_sex = 0;
                 }
 
                 "1" => {
                     edit_usr.gender = Some(1);
+                    new_sex = 1;
                 }
 
                 "2" => {
                     edit_usr.gender = Some(2);
+                    new_sex = 2;
                 }
                 _ => {
                     return parameter_error();
@@ -341,11 +345,14 @@ pub async fn edit_user(
         .filter(user_id.eq(usr_id))
         .execute(conn)
     {
-        Ok(_) => response::Json(json!({
-            "code": 200,
-            "msg": "修改成功",
-            "data": null
-        })),
+        Ok(_) => {
+            session.insert("gender", new_sex).expect("cannot store value");
+            return response::Json(json!({
+                "code": 200,
+                "msg": "修改成功",
+                "data": null
+            }));
+        }
         Err(_) => server_error(),
     }
 }
@@ -506,7 +513,8 @@ pub async fn get_order_list(
     let usr_orders = match orders
         .select(OrderInfo::as_select())
         .offset((p_size * (p_no - 1)) as i64)
-        .limit(p_size.into()).order(order_id.desc())
+        .limit(p_size.into())
+        .order(order_id.desc())
         .filter(user_id.eq(usr_id))
         .get_results(conn)
     {
@@ -536,7 +544,7 @@ pub async fn get_order_list(
         "data": {
             "pageSize":p_size,
             "pageNo":p_no,
-            "pageCount":(total / p_size as i64).to_string(),
+            "pageCount":((total / p_size as i64) + (total % p_size as i64> 0) as i64).to_string(),
             "total":total.to_string(),
             "list":resvec
         }

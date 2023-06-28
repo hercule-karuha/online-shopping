@@ -120,7 +120,6 @@ pub async fn get_avatar(Path(id): Path<String>) -> Response<Body> {
 }
 
 pub async fn get_store_cover(Path(id): Path<String>) -> Result<Response<Body>, StatusCode> {
-    println!("{}", id);
     let mut path = "images/store_cover/".to_string();
     path.push_str(&id);
 
@@ -144,7 +143,6 @@ pub async fn get_store_cover(Path(id): Path<String>) -> Result<Response<Body>, S
 }
 
 pub async fn get_products_cover(Path(id): Path<String>) -> Result<Response<Body>, StatusCode> {
-    println!("{}", id);
     let mut path = "images/products_cover/".to_string();
     path.push_str(&id);
 

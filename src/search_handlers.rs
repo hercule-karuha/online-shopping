@@ -122,7 +122,7 @@ pub async fn search_orders(
         }
     };
 
-    let request_data: SearchInfo = match from_value(payload) {
+    let request_data: SearchOrderInfo = match from_value(payload) {
         Ok(data) => data,
         Err(error) => {
             eprintln!("Failed to parse JSON: {}", error);

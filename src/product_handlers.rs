@@ -95,7 +95,6 @@ pub async fn new_product(
         .get_result::<i32>(conn);
 
     let path = "images/products_cover/".to_string() + &pro_id.as_ref().unwrap().to_string();
-    println!("{}", path);
     let mut file = match File::create(path).await {
         Ok(fe) => fe,
         Err(error) => {
@@ -134,6 +133,7 @@ pub async fn edit_product(
     };
     let mut new_prod = ProductIns::new(None);
     let mut prod_id = 0;
+    new_prod.sales = None;
 
     while let Some(field) = multipart.next_field().await.unwrap() {
         match field.name().unwrap().to_string().as_str() {
@@ -165,7 +165,7 @@ pub async fn edit_product(
             "cover" => {
                 let data = field.bytes().await.unwrap();
                 if !data.is_empty() {
-                    println!("get cover of {}",prod_id);
+                    println!("get cover of {}", prod_id);
                     let path = "images/products_cover/".to_string() + &prod_id.to_string();
 
                     if let Err(err) = write(path, &data).await {
@@ -268,7 +268,6 @@ pub async fn get_recommend(
     Json(payload): Json<Value>,
 ) -> Json<Value> {
     use crate::schema::products::dsl::*;
-
 
     let page_no = match payload["pageNo"].as_str() {
         Some(pn) => pn.parse::<i32>().unwrap() - 1,

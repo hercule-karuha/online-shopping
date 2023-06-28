@@ -83,7 +83,6 @@ pub async fn new_store(
         .expect("cannot store value");
 
     let path = "images/store_cover/".to_string() + &s_info.as_ref().unwrap().store_id.to_string();
-    println!("{}", path);
     let mut file = match File::create(path).await {
         Ok(fe) => fe,
         Err(error) => {
