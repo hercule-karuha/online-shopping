@@ -14,6 +14,8 @@
     "axios": "^1.4.0",
     "element-china-area-data": "^6.0.2",
     "element-plus": "^2.3.6",
+    "js-md5": "^0.7.3",
+    "md5-js": "^0.0.3",
     "mockjs": "^1.1.0",
     "nprogress": "^0.2.0",
     "pinia": "^2.1.3",
