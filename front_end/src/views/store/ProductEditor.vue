@@ -4,7 +4,9 @@
             <div class="header">新品</div>
             <el-form :model="formData" ref="formDataRef" :rules="rules" class="form" label-position="top" status-icon>
                 <el-form-item label="请上传你的商品封面" prop="cover">
-                    <CoverUpload @upload-image="uploadCover"></CoverUpload>
+                    <CoverUpload @upload-image="uploadCover"
+                        :imageUrl="productInfo.productId ? proxy.globalInfo.productCoverUrl + productInfo.productId : ''"
+                        :update="editFlag"></CoverUpload>
                 </el-form-item>
                 <el-form-item label="请输入你的商品名称" prop="name">
                     <el-input v-model="formData.name" type="text" clearable></el-input>
@@ -16,7 +18,7 @@
                 <el-form-item class="detail-images-form-item" label="请上传商品详情图片">
                     <el-upload ref="uploadDetailImagesRef" class="upload-detail-images"
                         :before-remove="handleRemoveDetailImg" multiple list-type="picture-card"
-                        :http-request="handleUploadDetailImg">
+                        :http-request="handleUploadDetailImg" v-model:file-list="fileList">
                         <el-icon>
                             <Plus />
                         </el-icon>
@@ -43,18 +45,22 @@
 
 <script setup>
 import CoverUpload from '@/components/CoverUpload.vue'
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, getCurrentInstance } from 'vue'
 import { uploadDetailImage, getImage } from '@/api/file.js'
-import { newProduct } from '@/api/product'
+import { newProduct, getProduct, editProduct } from '@/api/product'
 import message from '@/utils/message'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { parseAddressCodeArr } from '@/utils/tools'
 import { regionData } from 'element-china-area-data'
 const options = regionData
-
+const { proxy } = getCurrentInstance()
 import { useUserInfoStore } from '@/stores/userInfo'
 const router = useRouter()
+const route = useRoute()
 const userInfoStore = useUserInfoStore()
+
+const editFlag = ref(false)
+
 const formDataRef = ref(null)
 const formData = ref({
     detailImages: []
@@ -76,9 +82,43 @@ const handleUploadDetailImg = async (image) => {
     formData.value.detailImages.push(res.data.path)
     // return Promise.resolve()
 }
-onMounted(() => {
+const productInfo = ref({})
+const fileList = ref([])
+onMounted(async () => {
     if (!userInfoStore.userInfo || !userInfoStore.userInfo.userType) {
         router.push('/')
+    }
+    if (route.path.includes('/edit')) {
+        if (!route.params.id) {
+            router.go(-1)
+        }
+        const res = await getProduct(route.params.id)
+        if (!res) {
+            router.go(-1)
+        }
+        editFlag.value = true
+        productInfo.value = res.data
+        const resData = res.data
+        const address = JSON.parse(resData.address)
+        // 详情图片解析
+        resData.detailImages = resData.detailImages.split(',')
+        fileList.value = resData.detailImages.map((item) => {
+            return {
+                url: proxy.globalInfo.imgUrl + item
+            }
+        })
+
+        formData.value = {
+            name: resData.productName,
+            description: resData.description,
+            price: resData.price,
+            stock: resData.stock,
+            selectedRegion: address.codeArr,
+            detailAddress: address.detailAddress,
+            detailImages: resData.detailImages
+        }
+
+
     }
 })
 const handleRemoveDetailImg = (file, fileList) => {
@@ -93,13 +133,20 @@ const validateNum = (rule, value, callback) => {
         callback()
     }
 }
+const validateCover = (rule, value, callback) => {
+    if (!formData.value.cover && !editFlag.value) {
+        callback(new Error('请上传商品封面'))
+    } else {
+        callback()
+    }
+}
 const rules = {
     name: [
         { required: true, message: '请输入商品名称', trigger: 'blur' },
         { min: 1, max: 40, message: '长度在 1 到 40 个字符', trigger: 'blur' }
     ],
     cover: [
-        { required: true, message: '请上传商品封面', trigger: 'blur' }
+        { validator: validateCover, trigger: 'blur' }
     ],
     description: [
         { required: true, message: '请输入商品描述', trigger: 'blur' },
@@ -121,30 +168,51 @@ const rules = {
 }
 
 const submit = async () => {
-    if (!formDataRef.value.validate()) {
-        return
-    }
-    const detailImages = formData.value.detailImages.join(',')
-    const uploadFormData = new FormData()
-    uploadFormData.append('cover', formData.value.cover)
-    uploadFormData.append('name', formData.value.name)
-    uploadFormData.append('description', formData.value.description)
-    uploadFormData.append('detailImages', detailImages)
-    uploadFormData.append('price', formData.value.price)
-    uploadFormData.append('stock', formData.value.stock)
-    const addressArea = parseAddressCodeArr(formData.value.selectedRegion)
-    let address = {
-        codeArr: formData.value.selectedRegion,
-        areaArr: addressArea,
-        detailAddress: formData.value.detailAddress
-    }
-    address = JSON.stringify(address)
-    uploadFormData.append('address', address)
-    const result = await newProduct(uploadFormData)
-    if (!result) {
-        return
-    }
-    router.push('/product/detail/' + result.data.productId)
+    formDataRef.value.validate(async (valid) => {
+        if (!valid) {
+            return false
+        }
+        const detailImages = formData.value.detailImages.join(',')
+        const uploadFormData = new FormData()
+        
+        uploadFormData.append('name', formData.value.name)
+        uploadFormData.append('description', formData.value.description)
+        uploadFormData.append('detailImages', detailImages)
+        uploadFormData.append('price', formData.value.price)
+        uploadFormData.append('stock', formData.value.stock)
+        if (editFlag.value) {
+            uploadFormData.append('productId', route.params.id)
+        }
+        if (!editFlag.value || formData.value.cover instanceof File) {
+            uploadFormData.append('cover', formData.value.cover)
+        }
+        const addressArea = parseAddressCodeArr(formData.value.selectedRegion)
+        let address = {
+            codeArr: formData.value.selectedRegion,
+            areaArr: addressArea,
+            detailAddress: formData.value.detailAddress
+        }
+        address = JSON.stringify(address)
+        uploadFormData.append('address', address)
+        if (editFlag.value) {
+            
+            const result = await editProduct(uploadFormData)
+            if (!result) {
+                return
+            }
+            message.success('修改成功')
+            router.go(-1)
+        } else {
+            const result = await newProduct(uploadFormData)
+            if (!result) {
+                return
+            }
+            message.success('上传成功')
+            router.replace('/product/detail/' + result.data.productId)
+        }
+    })
+
+
 }
 </script>
 

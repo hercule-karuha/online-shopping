@@ -12,17 +12,17 @@
                         <el-icon v-else><Female /></el-icon>
                     </span>
                 </div>
-                <span class="edit" @click="dialogConfig.show=true"><el-icon><Edit /></el-icon>编辑个人信息</span>
+                <span class="edit" @click="toEditUserInfo"><el-icon><Edit /></el-icon>编辑个人信息</span>
             </div>
             <nav>
                 <ul class="tabs">
-                    <li><router-link to="/user/shoppingCart" 
-                    :class="[route.name=='shoppingCart'?'active_tab':'']">购物车</router-link></li>
-                    <li><router-link to="/user/order"
-                        :class="[route.name=='order'?'active_tab':'']">购买记录</router-link></li>
+                    <li><a @click="changeTab('/user/shoppingCart')"
+                    :class="[route.name=='shoppingCart'?'active_tab':'']">购物车</a></li>
+                    <li><a @click="changeTab('/user/order')" 
+                        :class="[route.name=='order'?'active_tab':'']">购买记录</a></li>
                     <!-- <li><a href="">买过的店</a></li> -->
-                    <li><router-link to="/user/stores"
-                        :class="[route.name=='stores'?'active_tab':'']">我的店铺</router-link></li>
+                    <li><a @click="changeTab('/user/stores')" 
+                        :class="[route.name=='stores'?'active_tab':'']">我的店铺</a></li>
                 </ul>
             </nav>
         </header>
@@ -38,8 +38,10 @@
                 <el-form ref="formDataRef" :model="formData" :rules="rules" label-position="top"
                 >
                     <el-form-item
-                        label="请上传你的头像" prop="cover">
-                    <CoverUpload @upload-image="uploadCover"></CoverUpload>
+                        label="请上传你的头像" prop="avatar">
+                    <CoverUpload @upload-image="uploadCover"
+                    :imageUrl="userInfoStore.userInfo.userId?proxy.globalInfo.avatarUrl+userInfoStore.userInfo.userId:''"
+                    :update="true"></CoverUpload>
                     </el-form-item>
                     <el-form-item label="性别" prop="gender">
                         <el-radio-group v-model="formData.gender" class="ml-4">
@@ -64,19 +66,20 @@
 
 <script setup>
 import { ref, watch, reactive, getCurrentInstance } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import DialogModule from '@/components/DialogModule.vue'
 import { parseAddressCodeArr } from '@/utils/tools'
+import message from '@/utils/message'
 import { regionData } from 'element-china-area-data'
 import { useUserInfoStore } from '@/stores/userInfo'
+import { getDetailUserInfo, editUserInfo } from '@/api/user'
 const { proxy } = getCurrentInstance()
 const options = regionData
 const userInfoStore = useUserInfoStore()
 console.log(userInfoStore.userinfo)
 const route = useRoute()
-watch(route, (to, from) => {
-    console.log(to, from)
-})
+const router = useRouter()
+
 
 const dialogConfig = reactive({
     show: false,
@@ -92,7 +95,23 @@ const dialogConfig = reactive({
         {
             text: '确定',
             type: 'primary',
-            click: () => {
+            click: async () => {
+                if (!formDataRef.value.validate()) return
+                const uploadForm = new FormData()
+                if (formData.value.avatar) {
+                    uploadForm.append('avatar', formData.value.avatar)
+                }
+                uploadForm.append('userName', formData.value.userName)
+                uploadForm.append('gender', formData.value.gender)
+                uploadForm.append('phone', formData.value.phone)
+                uploadForm.append('address', JSON.stringify({
+                    codeArr: formData.value.area,
+                    areaArr: parseAddressCodeArr(formData.value.area),
+                    detailAddress: formData.value.detailAddress
+                }))
+                const res = await editUserInfo(uploadForm)
+                if (!res) return
+                message.success('修改成功')
                 dialogConfig.show = false
             }
         }
@@ -103,6 +122,47 @@ const dialogConfig = reactive({
 const formDataRef = ref(null)
 const formData = ref({})
 
+const toEditUserInfo = async () => {
+    const res = await getDetailUserInfo()
+    if (!res) return
+    const resData = res.data
+    formData.value.userName = resData.userName
+    formData.value.gender = resData.sex
+    formData.value.phone = resData.phone
+    const address = JSON.parse(resData.address)
+    formData.value.area = address.codeArr
+    
+    formData.value.detailAddress = address.detailAddress
+    dialogConfig.show = true
+}
+
+const uploadCover = (file) => {
+    formData.value.cover = file
+}
+
+
+const changeTab = (to) => {
+    router.replace(to)
+}
+
+const rules = {
+    userName: [
+        {required: true, message: '请输入用户名', trigger: 'blur'},
+    ],
+    gender: [
+        {required: true, message: '请选择性别', trigger: 'blur'},
+    ],
+    phone: [
+        {required: true, message: '请输入手机号', trigger: 'blur'},
+        {pattern: /^1[3456789]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur'}
+    ],
+    area: [
+        {required: true, message: '请选择地区', trigger: 'blur'},
+    ],
+    detailAddress: [
+        {required: true, message: '请输入详细地址', trigger: 'blur'},
+    ],
+}
 </script>
 
 <style scoped lang="scss">
@@ -180,6 +240,7 @@ main{
                 list-style-type: none;
                 display: flex;
                 li{
+                    cursor: pointer;
                     margin-bottom: 5px;
                     a{
                         text-decoration: none;

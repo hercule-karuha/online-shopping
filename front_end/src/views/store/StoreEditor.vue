@@ -12,7 +12,7 @@
                 <el-form-item
                 label="请上传你的商店封面" prop="cover">
                     <CoverUpload @upload-image="uploadCover"
-                    :imageUrl="newStoreFlag?'':proxy.globalInfo.storeCoverUrl+formData.storeId" :update="!newStoreFlag"></CoverUpload>
+                    :imageUrl="newStoreFlag?'':coverUrl" :update="!newStoreFlag"></CoverUpload>
                 </el-form-item>
                 <el-form-item
                 label="请输入你的商店名称" prop="name">
@@ -49,6 +49,10 @@ import { parseAddressCodeArr } from '@/utils/tools'
 import { getUserInfo } from '@/api/user'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserInfoStore } from '@/stores/userInfo'
+
+const coverUrl = ref('')
+
+
 const newStoreFlag = ref(true)
 const { proxy } = getCurrentInstance()
 const options = regionData
@@ -69,6 +73,7 @@ onMounted(async () => {
     if  (userInfoStore.userInfo === {} || !userInfoStore.userInfo) {
         const updateUserInfo = await getUserInfo()
         userInfoStore.userInfo = updateUserInfo.data
+        
     }
     if (route.path === '/store/edit') {
         if (userInfoStore.userInfo.storeId == 0) {
@@ -81,6 +86,7 @@ onMounted(async () => {
             return
         } else {
             const storeInfo = result.data
+            coverUrl.value = proxy.globalInfo.storeCoverUrl+userInfoStore.userInfo.storeId
             storeInfo.address = JSON.parse(storeInfo.address)
             formData.value.name = storeInfo.name
             formData.value.storeId = storeInfo.storeId

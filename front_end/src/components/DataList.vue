@@ -9,8 +9,8 @@
 				<slot v-for="(item, index) in dataSource.list" :key="index" :data="item" />
 			</div>
 			<div class="page">
-				<el-pagination hide-on-single-page :page-size="dataSource.pageSize" :page-count="dataSource.pageCount"
-					layout="prev, pager, next" :total="dataSource.total" @update:current-page="pageNoChange" />
+				<el-pagination hide-on-single-page :page-size="Number.parseInt(dataSource.pageSize)" :page-count="Number.parseInt(dataSource.pageCount)"
+					layout="prev, pager, next" :total="Number.parseInt(dataSource.total)" @update:current-page="pageNoChange" />
 			</div>
 		</div>
 	</div>
@@ -55,11 +55,19 @@ const pageNoChange = (pageNo) => {
 </script>
 
 <style scoped lang="scss">
-
+.box{
+	
+	width: 100%;
+	.content{
+		flex-wrap: wrap;
+		width: 100%;
+	}
+}
 .page {
 	margin-top: 20px;
 	display: flex;
 	justify-content: center;
 	padding-bottom: 20px;
+	
 }
 </style>
