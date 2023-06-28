@@ -289,7 +289,7 @@ pub async fn get_recommend(
         .offset((page_no * page_sz).into())
         .limit(page_sz.into())
         .filter(delete_product.ne(1))
-        .order(sales.asc())
+        .order(sales.desc())
         .select(Product::as_select())
         .get_results::<Product>(conn);
 
