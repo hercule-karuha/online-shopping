@@ -5,7 +5,7 @@
             <button @click="search">搜索</button>
         </header>
         <div class="content">
-            <DataList :dataSource="dataSource" @changePage="changePage">
+            <DataList :dataSource="dataSource" :loading="loading" @changePage="changePage">
                 <template #default="{ data }">
                     <ProductItem :data="data" />
                 </template>
@@ -29,13 +29,14 @@ const dataSource = ref({
     pageCount: 0,
     list: []
 })
+const loading = ref(false)
 onMounted(async() => {
     if (!route.query.keyword) return
     keyword.value = route.query.keyword
     const res = await  searchProduct({
         keyword: keyword.value,
         pageNo: '1',
-        pageSize: '15',
+        pageSize: '12',
         storeId: '0'
     })
     if (!res) return
@@ -49,7 +50,7 @@ watch(() => route.query.keyword, async (val) => {
     const res = await  searchProduct({
         keyword: keyword.value,
         pageNo: '1',
-        pageSize: '15',
+        pageSize: '12',
         storeId: '0'
     })
     if (!res) return
@@ -68,12 +69,14 @@ const search = async () => {
     })
 }
 const changePage = async (pageNo) => {
+    loading.value = true
     const res = await searchProduct({
         keyword: keyword.value,
-        pageNo: pageNo.toStirng(),
-        pageSize: '15',
+        pageNo: (Number.parseInt(pageNo)).toString(),
+        pageSize: '12',
         storeId: '0'
     })
+    loading.value = false
     if (!res) return
     dataSource.value = res.data
 }

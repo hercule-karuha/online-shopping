@@ -1,10 +1,10 @@
 <template>
 	<div class="product-item"> 
-		<div class="cover" @click="router.push('/product/detail/' + data.productId)">
+		<div class="cover" @click="goDetail(data.productId)">
 			<img :src="proxy.globalInfo.productCoverUrl+data.productId" alt="">
 		</div>
 		<div class="info">
-			<div @click="router.push('/product/detail/' + data.productId)" class="name">
+			<div @click="goDetail(data.productId)" class="name">
 				{{ data.productName }}
 			</div>
 			<div class="edit" v-if="showEdit" >
@@ -45,6 +45,9 @@ const goEdit = (productId) => {
 }
 const deleteProduct = (productId) => {
 	emit('delProduct', productId)
+}
+const goDetail = (productId) => {
+	window.open('/product/detail/' + productId, '_blank')
 }
 </script>
 

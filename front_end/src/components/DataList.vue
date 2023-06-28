@@ -10,7 +10,7 @@
 			</div>
 			<div class="page">
 				<el-pagination hide-on-single-page :page-size="Number.parseInt(dataSource.pageSize)" :page-count="Number.parseInt(dataSource.pageCount)"
-					layout="prev, pager, next" :total="Number.parseInt(dataSource.total)" @update:current-page="pageNoChange" />
+					layout="prev, pager, next" :current-page="Number.parseInt(dataSource.pageNo)" :total="Number.parseInt(dataSource.total)" @update:current-page="pageNoChange" />
 			</div>
 		</div>
 	</div>

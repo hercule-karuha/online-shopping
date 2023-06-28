@@ -11,7 +11,7 @@
             </div>
         </header>
         <div class="content">
-            <DataList :data-source="dataSource" :flex="false">
+            <DataList :data-source="dataSource" :flex="false" @changePage="changePage" :loading="loading">
                 <template #default="{ data }">
                     <ShoppingCartItem :data="data" @delete="delItem" />
                 </template>
@@ -33,6 +33,7 @@ const router = useRouter()
 const purchaseListStore = usePurchaseListStore()
 const dataSource = ref({ list: [] })
 const totalPrice = ref(0)
+const loading = ref(false)
 onMounted(async () => {
     const res = await getShoppingCart({
         pageSize: '10',
@@ -59,6 +60,17 @@ const purchase = () => {
 
 const delItem = (id) => {
     dataSource.value.list = dataSource.value.list.filter(item => item.productId !== id)
+}
+
+const changePage = async (pageNo) => {
+    loading.value = true
+    const res = await getShoppingCart({
+        pageSize: '10',
+        pageNo:  (Number.parseInt(pageNo)).toString(),
+    })
+    loading.value = false
+    if (!res) return
+    dataSource.value = res.data
 }
 </script>
 

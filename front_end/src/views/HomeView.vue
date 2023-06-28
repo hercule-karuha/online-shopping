@@ -85,9 +85,9 @@
 		</nav>
 		<div class="homepage-list">
 			<span>猜你喜欢</span>
-			<DataList :data-source="dataSource" @page-no-change="pageNoChange">
+			<DataList :data-source="dataSource">
 				<template #default="{ data }">
-					<ProductItem :data="data" @click="router.push('/product/detail/' + data.productId)" />
+					<ProductItem :data="data" />
 				</template>
 			</DataList>
 		</div>
@@ -127,10 +127,8 @@ const showRecord = (flag) => {
 }
 const delRecord = (index) => {
 	searchLogs.value.splice(index, 1)
-	console.log('del')
 }
 const goSearch = (keyword) => {
-	console.log(keyword)
 	if (! keyword) return
 	if (keyword.trim() == '') {
 		message.waning('请输入关键词')
@@ -149,7 +147,7 @@ onMounted(async () => {
 	window.addEventListener('click', closeRecord)
 	const res = await getRecommend({
 		pageNo: '1',
-		pageSize: '15'
+		pageSize: '9'
 	})
 	if (! res) return
 	dataSource.value = res.data
@@ -165,9 +163,6 @@ const goAccount = (type) => {
 	router.push('/account/' + type)
 }
 
-const pageNoChange = (pageNo) => {
-	console.log(pageNo)
-}
 const goNewStore = () => {
 	if (userInfoStore.userInfo.userId) {
 		router.push('/store/newStore')
