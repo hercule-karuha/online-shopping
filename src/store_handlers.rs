@@ -181,17 +181,9 @@ pub async fn edit_store(
 
 pub async fn get_store_info(
     State(pool): State<Pool<ConnectionManager<PgConnection>>>,
-    session: ReadableSession,
     Path(id): Path<String>,
 ) -> Json<Value> {
     use crate::schema::stores::dsl::*;
-
-    match session.get::<i32>("id") {
-        Some(uid) => uid,
-        None => {
-            return no_login_error();
-        }
-    };
 
     let st_id = match id.parse::<i32>() {
         Ok(sid) => sid,
@@ -222,16 +214,9 @@ pub async fn get_store_info(
 
 pub async fn get_product_list(
     State(pool): State<Pool<ConnectionManager<PgConnection>>>,
-    session: ReadableSession,
     Json(payload): Json<Value>,
 ) -> Json<Value> {
     use crate::schema::products::dsl::*;
-    match session.get::<i32>("id") {
-        Some(id) => id,
-        None => {
-            return no_login_error();
-        }
-    };
 
     let st_id = match payload["storeId"].as_str() {
         Some(id) => id.parse::<i32>().unwrap(),
@@ -303,7 +288,7 @@ pub async fn get_product_list(
         "msg": "请求成功",
         "data": {
             "pageSize": page_sz.to_string(), //一页的个数
-            "pageNo": page_no.to_string(), //页数
+            "pageNo": (page_no+1).to_string(), //页数
             "pageCount": ((total / page_sz as i64) + (total % page_sz as i64> 0) as i64).to_string(), //总页数
             "total": total.to_string(), //总记录数
             "list":result_vec,
@@ -409,7 +394,7 @@ pub async fn get_sale_order(
         "msg": "请求成功",
         "data": {
             "pageSize":p_size,
-            "pageNo":p_no,
+            "pageNo":p_no+1,
             "pageCount":(total / p_size as i64).to_string(),
             "total":total.to_string(),
             "list":resvec

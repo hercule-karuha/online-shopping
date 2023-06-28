@@ -109,6 +109,7 @@ pub struct ProductIns {
     pub stock: Option<i32>,
     pub sales: Option<i32>,
     pub store_address: Option<String>,
+    pub delete_product: Option<i32>,
 }
 
 impl ProductIns {
@@ -122,6 +123,7 @@ impl ProductIns {
             stock: None,
             sales: Some(0),
             store_address: None,
+            delete_product: Some(0)
         }
     }
 }

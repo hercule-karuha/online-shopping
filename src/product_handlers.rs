@@ -11,6 +11,7 @@ use diesel::PgConnection;
 use diesel::{insert_into, update};
 use serde_json::{json, Value};
 
+use tokio::fs::write;
 use tokio::fs::File;
 use tokio::io::AsyncWriteExt;
 
@@ -131,7 +132,7 @@ pub async fn edit_product(
             return parameter_error();
         }
     };
-    let mut new_prod = Product::new(None);
+    let mut new_prod = ProductIns::new(None);
     let mut prod_id = 0;
 
     while let Some(field) = multipart.next_field().await.unwrap() {
@@ -164,15 +165,23 @@ pub async fn edit_product(
             "cover" => {
                 let data = field.bytes().await.unwrap();
                 if !data.is_empty() {
+                    println!("get cover of {}",prod_id);
                     let path = "images/products_cover/".to_string() + &prod_id.to_string();
-                    let mut file = match File::create(path).await {
-                        Ok(fe) => fe,
-                        Err(error) => {
-                            println!("{}", error);
-                            return server_error();
-                        }
-                    };
-                    file.write_all(&data).await.expect("write error");
+
+                    if let Err(err) = write(path, &data).await {
+                        eprintln!("Failed to write file: {}", err);
+                    } else {
+                        println!("File overwritten successfully.");
+                    }
+
+                    // let mut file = match File::create(path).await {
+                    //     Ok(fe) => fe,
+                    //     Err(error) => {
+                    //         println!("{}", error);
+                    //         return server_error();
+                    //     }
+                    // };
+                    // file.write(&data).await.expect("write error");
                 }
             }
             "productId" => {
@@ -205,7 +214,10 @@ pub async fn edit_product(
             "msg": "修改成功",
             "data": null
         })),
-        Err(_) => server_error(),
+        Err(err) => {
+            println!("err: {}", err.to_string());
+            server_error()
+        }
     }
 }
 
@@ -253,16 +265,10 @@ pub async fn get_product_info(
 
 pub async fn get_recommend(
     State(pool): State<Pool<ConnectionManager<PgConnection>>>,
-    session: ReadableSession,
     Json(payload): Json<Value>,
 ) -> Json<Value> {
     use crate::schema::products::dsl::*;
-    match session.get::<i32>("id") {
-        Some(id) => id,
-        None => {
-            return no_login_error();
-        }
-    };
+
 
     let page_no = match payload["pageNo"].as_str() {
         Some(pn) => pn.parse::<i32>().unwrap() - 1,

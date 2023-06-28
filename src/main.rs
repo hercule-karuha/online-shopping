@@ -67,9 +67,10 @@ async fn main() {
         .route("/api/search/searchSales", post(search_sales))
         .route("/api/user/getDetailUserInfo", get(get_user_detail))
         .route("/api/product/getRecommend", post(get_recommend))
+        .route("/api/product/deleteProduct", post(remove_product))
         .with_state(pool)
         .layer(session_layer)
-        .layer(DefaultBodyLimit::max(1024 * 1024 * 10));
+        .layer(DefaultBodyLimit::max(1024 * 1024 * 30));
 
     let addr = "0.0.0.0:3000".parse().unwrap();
     Server::bind(&addr)

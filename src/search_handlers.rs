@@ -10,22 +10,15 @@ use diesel::PgConnection;
 use diesel::{dsl::count_star, prelude::*};
 use serde_json::{from_value, json, Value};
 
-use crate::{model::*};
+use crate::model::*;
 
 use crate::error_return::*;
 
 pub async fn search_product(
     State(pool): State<Pool<ConnectionManager<PgConnection>>>,
-    session: ReadableSession,
     Json(payload): Json<Value>,
 ) -> response::Json<Value> {
     use crate::schema::products::dsl::*;
-    match session.get::<i32>("id") {
-        Some(_) => {}
-        None => {
-            return no_login_error();
-        }
-    };
 
     let request_data: SearchInfo = match from_value(payload) {
         Ok(data) => data,
@@ -74,7 +67,10 @@ pub async fn search_product(
         .into_boxed();
 
     let filt_query = match st_id {
-        0 => query.filter(name.like(format!("%{}%", request_data.keyword)).and(delete_product.ne(1))),
+        0 => query.filter(
+            name.like(format!("%{}%", request_data.keyword))
+                .and(delete_product.ne(1)),
+        ),
         _ => query.filter(
             name.like(format!("%{}%", request_data.keyword))
                 .and(store_id.eq(st_id).and(delete_product.ne(1))),
@@ -105,7 +101,7 @@ pub async fn search_product(
         "msg": "请求成功",
         "data": {
             "pageSize":p_size,
-            "pageNo":p_no,
+            "pageNo":p_no+1,
             "pageCount":((total / p_size as i64) + (total % p_size as i64> 0) as i64).to_string(),
             "total":total.to_string(),
             "list":value_vec
@@ -155,7 +151,11 @@ pub async fn search_orders(
 
     let total = orders
         .select(count_star())
-        .filter(product_name.like(format!("%{}%", request_data.keyword)).and(user_id.eq(usr_id)))
+        .filter(
+            product_name
+                .like(format!("%{}%", request_data.keyword))
+                .and(user_id.eq(usr_id)),
+        )
         .first::<i64>(conn)
         .unwrap();
 
@@ -163,8 +163,13 @@ pub async fn search_orders(
         .select(OrderInfo::as_select())
         .offset((p_size * (p_no - 1)) as i64)
         .limit(p_size.into())
-        .filter(product_name.like(format!("%{}%", request_data.keyword)).and(user_id.eq(usr_id)))
-        .get_results(conn).unwrap();
+        .filter(
+            product_name
+                .like(format!("%{}%", request_data.keyword))
+                .and(user_id.eq(usr_id)),
+        )
+        .get_results(conn)
+        .unwrap();
 
     let mut value_vec: Vec<Value> = Vec::new();
 
@@ -187,14 +192,13 @@ pub async fn search_orders(
         "msg": "请求成功",
         "data": {
             "pageSize":p_size,
-            "pageNo":p_no,
+            "pageNo":p_no+1,
             "pageCount":((total / p_size as i64) + (total % p_size as i64> 0) as i64).to_string(),
             "total":total.to_string(),
             "list":value_vec
         },
     }))
 }
-
 
 pub async fn search_sales(
     State(pool): State<Pool<ConnectionManager<PgConnection>>>,
@@ -252,7 +256,11 @@ pub async fn search_sales(
 
     let total = orders
         .select(count_star())
-        .filter(product_name.like(format!("%{}%", request_data.keyword)).and(store_id.eq(st_id)))
+        .filter(
+            product_name
+                .like(format!("%{}%", request_data.keyword))
+                .and(store_id.eq(st_id)),
+        )
         .first::<i64>(conn)
         .unwrap();
 
@@ -260,8 +268,13 @@ pub async fn search_sales(
         .select(OrderInfo::as_select())
         .offset((p_size * (p_no - 1)) as i64)
         .limit(p_size.into())
-        .filter(product_name.like(format!("%{}%", request_data.keyword)).and(store_id.eq(st_id)))
-        .get_results(conn).unwrap();
+        .filter(
+            product_name
+                .like(format!("%{}%", request_data.keyword))
+                .and(store_id.eq(st_id)),
+        )
+        .get_results(conn)
+        .unwrap();
 
     let mut value_vec: Vec<Value> = Vec::new();
 
@@ -284,7 +297,7 @@ pub async fn search_sales(
         "msg": "请求成功",
         "data": {
             "pageSize":p_size,
-            "pageNo":p_no,
+            "pageNo":p_no+1,
             "pageCount":((total / p_size as i64) + (total % p_size as i64> 0) as i64).to_string(),
             "total":total.to_string(),
             "list":value_vec
