@@ -8,7 +8,7 @@
             </div>
         </header>
         <div class="content">
-            <DataList :data-source="dataSource" :flex="false">
+            <DataList :data-source="dataSource" :flex="false" :loading="loading" :pageChange="pageChange">
                 <template #default="{ data }">
                     <div class="order-item">
                         <div class="top">
@@ -42,13 +42,8 @@ import { getOrderList } from '@/api/user.js'
 import { parseAddressCodeArr } from '@/utils/tools.js'
 const keyword = ref('')
 const dataSource = ref({ list: [] })
-onMounted(async () => {
-    const res = await getOrderList({
-        pageSize: '10',
-        pageNo: '1',
-    })
-    if (!res) return
-    dataSource.value = res.data
+const loading = ref(false)
+const parseOrderFormat = () => {
     dataSource.value.list.forEach((item) => {
         item.sendAddress = JSON.parse(item.sendAddress)
         if (item.sendAddress.areaArr) {
@@ -59,12 +54,32 @@ onMounted(async () => {
         item.sendAddress = item.sendAddress.areaArr.join('  ') + '  ' + item.sendAddress.detailAddress
         item.receiveAdress = item.receiveAddress + '  ' + item.phone
     })
+}
+onMounted(async () => {
+    const res = await getOrderList({
+        pageSize: '8',
+        pageNo: '1',
+    })
+    if (!res) return
+    dataSource.value = res.data
+    parseOrderFormat()
 })
 
 const search = async () => {
     if (keyword.value.trim() === '') {
         message.warning('关键词不能为空')
     }
+}
+const pageChange = async (pageNo) => {
+    loading.value = true
+    const res = await getOrderList({
+        pageSize: '8',
+        pageNo: pageNo,
+    })
+    loading.value = false
+    if (!res) return
+    dataSource.value = res.data
+    parseOrderFormat()
 }
 </script>
 

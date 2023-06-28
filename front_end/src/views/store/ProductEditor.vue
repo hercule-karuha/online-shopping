@@ -123,7 +123,6 @@ onMounted(async () => {
 })
 const handleRemoveDetailImg = (file, fileList) => {
     const index = fileList.indexOf(file)
-    console.log(index)
     formData.value.detailImages.splice(index, 1)
 }
 const validateNum = (rule, value, callback) => {

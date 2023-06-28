@@ -2,7 +2,7 @@
 	<div>
 		<router-view v-slot="{ Component }">
 			<transition enter-active-class="animate__animated animate__fadeIn animate__faster">
-				<component :is="Component" />
+					<component :is="Component" />
 			</transition>
 		</router-view>
 		<nav>
@@ -78,7 +78,6 @@ onBeforeMount(async () => {
 	const res = await getUserInfo()
 	if (res.code === 200) {
 		userInfoStore.userInfo = res.data
-		console.log(res.data)
 	}
 })
 </script>

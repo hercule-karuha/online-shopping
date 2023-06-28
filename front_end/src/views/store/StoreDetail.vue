@@ -137,20 +137,19 @@ onMounted(async () => {
     if (userInfoStore.userInfo && userInfoStore.userInfo.userId == storeInfo.value.userId) {
         editable.value = true
     }
-    const requst = {
+    query = {
         storeId: route.params.id,
         pageSize: '15',
         pageNo: '1',
         orderType: '0'
     }
-    const listResult = await getStoreProductList(requst)
+    const listResult = await getStoreProductList(query)
     if (!listResult) return
     dataSource.value = listResult.data
 
 })
 
 const handleClick = async (tab) => {
-    console.log(tab.props)
     query = {
         pageSize: '15',
         pageNo: '1',
@@ -197,18 +196,23 @@ const handleClick = async (tab) => {
 const changePage = async (pageNo) => {
     query.pageNo = pageNo.toString()
     if (activeName.value == 'orders') {
+        loading.value = true
         const res = await getOrders(query)
+        loading.value = false
         if (!res) return
         dataSource.value = res.data
         parseOrderFormat()
         return
     } else {
+        loading.value = true
         const res = await getStoreProductList(query)
+        loading.value = false
         if (!res) return
         dataSource.value = res.data
     }
 }
 const delProduct = async (id) => {
+
     const res = await deleteProduct({
         productId: id
     })
