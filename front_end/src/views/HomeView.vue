@@ -73,7 +73,7 @@
 							</el-icon>
 							<span >购买记录</span>
 						</div>
-						<div  @click="router.push('/user/stores')">
+						<div v-if="userInfo.userId && userInfo.userType == 1" @click="router.push('/user/stores')">
 							<el-icon>
 								<TakeawayBox />
 							</el-icon>

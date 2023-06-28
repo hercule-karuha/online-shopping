@@ -2,7 +2,7 @@
 	<div class="content">
 		<main>
 			<div class="cover">
-				<img :src="productInfo.productId?proxy.globalInfo.productCoverUrl+productInfo.productId:''" alt="">
+				<img :src="productInfo.productId ? proxy.globalInfo.productCoverUrl + productInfo.productId : ''" alt="">
 			</div>
 			<div class="purchase-info">
 				<div class="name">
@@ -32,20 +32,21 @@
 					<el-input-number v-model="num" :min="1" :max="productInfo.stock" />
 				</div>
 				<div class="purchase">
-					<button :class="[productInfo.canbuy == '0'?'canot':'']" @click="handlePurchase">{{ productInfo.canbuy == '0'?'已下架':'立即购买' }}</button>
+					<button :class="[productInfo.canbuy == '0' ? 'canot' : '']" @click="handlePurchase">{{ productInfo.canbuy ==
+						'0' ? '已下架' : '立即购买' }}</button>
 					<button v-if="productInfo.canbuy == '1'" @click="add2ShoppingCart">加入购物车</button>
 				</div>
 			</div>
 		</main>
-		<div class="store" :style="{'background-image': 'url('+ proxy.globalInfo.storeCoverUrl+productInfo.storeId+')'}">
+		<div class="store" :style="{ 'background-image': 'url(' + proxy.globalInfo.storeCoverUrl + productInfo.storeId + ')' }">
 			<div class="bg">
 				<div class="store-cover">
-					<img :src="productInfo.storeId?proxy.globalInfo.storeCoverUrl+productInfo.storeId:''" alt="">
+					<img :src="productInfo.storeId ? proxy.globalInfo.storeCoverUrl + productInfo.storeId : ''" alt="">
 				</div>
 				<div class="store-info">
 					{{ storeInfo.name }}
 				</div>
-				<button @click="router.push('/store/detail/'+productInfo.storeId)">进店逛逛</button>
+				<button @click="router.push('/store/detail/' + productInfo.storeId)">进店逛逛</button>
 			</div>
 		</div>
 		<div class="detail">
@@ -53,7 +54,7 @@
 				<el-tab-pane label="商品详情" name="details">
 					<div class="detail-images">
 						<div v-for="(item, index) in detailImages" :key="index" class="detail-image">
-							<img :src="proxy.globalInfo.imgUrl+item" alt="">
+							<img :src="proxy.globalInfo.imgUrl + item" alt="">
 						</div>
 					</div>
 				</el-tab-pane>
@@ -67,7 +68,7 @@
 
 <script setup>
 import { useRoute, useRouter } from 'vue-router'
-import { ref, watch, getCurrentInstance } from 'vue'
+import { ref, watch, getCurrentInstance, onBeforeUnmount, onMounted } from 'vue'
 import { getProduct } from '@/api/product.js'
 import { getStoreInfo } from '@/api/store.js'
 import { parseAddressCodeArr } from '@/utils/tools'
@@ -79,21 +80,21 @@ const { proxy } = getCurrentInstance()
 const route = useRoute()
 const detailImages = ref([])
 const storeInfo = ref({})
-watch(() => route.params.id, (val) => {
-	if (!val) {
+onMounted(async () => {
+	const res = await getProduct(route.params.id)
+	if (!res) {
 		return
 	}
-	getProduct(val).then(res => {
-		productInfo.value = res.data
-		detailImages.value = res.data.detailImages.split(',')
-		const address = JSON.parse(res.data.address)
-		productInfo.value.stock = Number.parseInt(productInfo.value.stock)
-		productInfo.value.address = parseAddressCodeArr(address.codeArr).join('  ') + address.detailAddress
-		getStoreInfo(res.data.storeId).then(res => {
-			storeInfo.value = res.data
-		})
+	productInfo.value = res.data
+	detailImages.value = res.data.detailImages.split(',')
+	const address = JSON.parse(res.data.address)
+	productInfo.value.stock = Number.parseInt(productInfo.value.stock)
+	productInfo.value.address = parseAddressCodeArr(address.codeArr).join('  ') + address.detailAddress
+	getStoreInfo(res.data.storeId).then(res => {
+		storeInfo.value = res.data
 	})
-}, {immediate :true})
+})
+
 const router = useRouter()
 const productInfo = ref({})
 
@@ -113,11 +114,11 @@ const handlePurchase = () => {
 		price: productInfo.value.price,
 		name: productInfo.value.name,
 	})
-	
+
 	router.push('/purchase')
 }
 const add2ShoppingCart = async () => {
-	let request =  {
+	let request = {
 		list: [
 			{
 				productId: productInfo.value.productId,
@@ -234,25 +235,28 @@ const add2ShoppingCart = async () => {
 		border-radius: 20px;
 		background-size: cover;
 		overflow: hidden;
+
 		.bg {
 			padding: 20px;
 			display: flex;
 			backdrop-filter: blur(5px);
 			position: relative;
+
 			&::after {
 				content: '';
 				position: absolute;
-				background-image: linear-gradient(to right , transparent 0%, #ffffff 50%);
+				background-image: linear-gradient(to right, transparent 0%, #ffffff 50%);
 				height: 100%;
 				width: 100%;
 				top: 0;
 				left: 0;
 				z-index: -1;
 			}
+
 			.store-cover {
 				height: 100px;
 				width: 100px;
-				
+
 				img {
 					height: 100%;
 					width: 100%;
@@ -268,6 +272,7 @@ const add2ShoppingCart = async () => {
 				align-items: center;
 				letter-spacing: 10px;
 				position: relative;
+
 				// cursor: none;
 				&::after {
 					transition: all 0.3s ease;
@@ -279,6 +284,7 @@ const add2ShoppingCart = async () => {
 					bottom: 20px;
 					left: -4px;
 				}
+
 				&:hover {
 					&::after {
 						width: 100%;
@@ -315,8 +321,10 @@ const add2ShoppingCart = async () => {
 
 		.detail-images {
 			margin: 20px;
+
 			.detail-image {
 				margin-bottom: 20px;
+
 				img {
 					width: 100%;
 					object-fit: cover;
@@ -325,7 +333,7 @@ const add2ShoppingCart = async () => {
 		}
 	}
 }
-.canot{
+
+.canot {
 	background-color: #ddd !important;
-}
-</style>
+}</style>
