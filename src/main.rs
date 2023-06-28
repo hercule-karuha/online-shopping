@@ -1,4 +1,5 @@
 use axum::{
+    extract::DefaultBodyLimit,
     routing::{get, post},
     Router, Server,
 };
@@ -12,12 +13,16 @@ use std::env;
 
 use account_handlers::*;
 use file_handlers::*;
+use product_handlers::*;
+use purchase_handlers::*;
 use store_handlers::*;
 
 pub mod account_handlers;
 pub mod error_return;
 pub mod file_handlers;
 pub mod model;
+pub mod product_handlers;
+pub mod purchase_handlers;
 pub mod schema;
 pub mod store_handlers;
 
@@ -38,8 +43,21 @@ async fn main() {
         .route("/api/user/getUserInfo", get(get_user_info))
         .route("/api/file/uploadImage", post(upload_image))
         .route("/api/file/getImage/*image_path", get(get_image))
+        .route("/api//file/getAvatar/:id", get(get_avatar))
+        .route("/api/file/getProductCover/:id", get(get_products_cover))
+        .route("/api/file/getStoreCover/:id", get(get_store_cover))
+        .route("/api/product/newProduct", post(new_product))
+        .route("/api/user/editUserinfo", post(edit_user))
+        .route("/api/product/editProduct", post(edit_product))
+        .route("/api/store/getStoreInfo/:id", get(get_store_info))
+        .route("/api/product/getProduct/:id", get(get_product_info))
+        .route("/api/store/editStore", post(edit_store))
+        .route("/api/store/getStoreProductList", post(get_product_list))
+        .route("/api/purchase/addShoppingCart", post(add_shopping_cart))
+        .route("/api/purchase/immediatePurchase", post(immediate_purchase))
         .with_state(pool)
-        .layer(session_layer);
+        .layer(session_layer)
+        .layer(DefaultBodyLimit::max(1024 * 1024 * 10));
 
     let addr = "0.0.0.0:3000".parse().unwrap();
     Server::bind(&addr)

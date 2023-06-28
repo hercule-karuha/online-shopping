@@ -1,7 +1,7 @@
-import axios from "axios"
-import message from "./message"
-import { useUserInfoStore } from "@/stores/userInfo"
-import nProgress from "nprogress"
+import axios from 'axios'
+import message from './message'
+import { useUserInfoStore } from '@/stores/userInfo'
+import nProgress from 'nprogress'
 const userInfoStore = useUserInfoStore()
 const instance = axios.create({
     baseURL: '/api',
@@ -14,22 +14,19 @@ instance.interceptors.request.use(config => {
         nProgress.start()
         isLoading = true
     }
-    if (userInfoStore.userInfo.value.token) {
-        config.headers['Authorization'] = userInfoStore.userInfo.value.token
-    }
     return config
 }, error => {
     if (isLoading) {
         nProgress.done()
         isLoading = false
     }
-    message.error("请求失败")
+    message.error('请求失败')
     return Promise.reject(error)
 })
 
 // 响应拦截器
 instance.interceptors.response.use(response => {
-    let { showLoading, errorCallback, successCallback, showError } = response.config
+    const { showLoading, errorCallback, successCallback, showError } = response.config
     // 防止多个请求时，提前关闭loading
     if (isLoading && showLoading) {
         nProgress.done()
@@ -37,18 +34,18 @@ instance.interceptors.response.use(response => {
     }
     const responseData = response.data
     if (responseData.code === 200) {
-        // 请求成功
+    // 请求成功
         if (successCallback) {
             successCallback(responseData)
         }
         return responseData
     } else if (responseData.code === 900) {
-        // 需要登录
+    // 需要登录
         userInfoStore.userInfo = {}
         userInfoStore.needLogin = true
         return Promise.reject(responseData)
     } else {
-        // 其他错误
+    // 其他错误
         if (errorCallback) {
             errorCallback(responseData)
         }
@@ -57,8 +54,8 @@ instance.interceptors.response.use(response => {
         }
         return Promise.reject(responseData)
     }
-
 }, error => {
+    // http请求错误
     if (isLoading) {
         nProgress.done()
         isLoading = false
@@ -67,9 +64,9 @@ instance.interceptors.response.use(response => {
     return Promise.reject(error)
 })
 
-const request = (config => {
-    let { url, data, params, method, showLoading = true, errorCallback, successCallback, showError = true } = config
-    return instance({
+const request = async config => {
+    const { url, data, params, method, showLoading = true, errorCallback, successCallback, showError = true } = config
+    return await instance({
         url,
         method,
         data,
@@ -79,6 +76,6 @@ const request = (config => {
         successCallback,
         showError
     })
-})
+}
 
 export default request

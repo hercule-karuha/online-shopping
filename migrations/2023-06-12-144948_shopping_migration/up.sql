@@ -1,4 +1,4 @@
-create table users
+  create table users
 (
     user_id   serial
         primary key,
@@ -25,10 +25,6 @@ comment on column users.user_type is '用户类型 ';
 comment on column users.phone is '用户电话';
 
 comment on column users.address is '用户/商家地址';
-
-
-create index idx_users_account_password
-    on users (user_name, password);
 
 create table stores
 (
@@ -58,11 +54,19 @@ create table products
         references stores,
     name        varchar(100),
     description text,
+<<<<<<< HEAD
+    price       float,
+    sales       integer,
+    stock       integer,
+    detail_images varchar(200),
+    store_address varchar(100)
+=======
     cover_id varchar(200),
-    price       numeric(10, 2),
+    price       float,
     sales       integer,
     stock       integer,
     detail_images varchar(200)
+>>>>>>> 26f09b3292b545309631648478b7eb9e6e2d1dd0
 );
 
 comment on table products is '商品表，包含各个商品的详细信息';
@@ -74,10 +78,6 @@ comment on column products.price is '单价， DECIMAL(10,2)，表示为数字�
 comment on column products.sales is '销量';
 comment on column products.stock is '库存量';
 
-create EXTENSION if not exists btree_gist ;
-
-create index idx_products_price_sales_stock on products using gist(price,sales,stock);
-
 create table orders
 (
     order_id      serial
@@ -87,8 +87,13 @@ create table orders
     product_id INTEGER
         references products,
     purchase_time timestamp ,
-    total_price   numeric(10, 2),
+    total_price   float,
     quantity      integer
+<<<<<<< HEAD
+    user_phone     varchar(20),
+    user_address   varchar(100)
+=======
+>>>>>>> 26f09b3292b545309631648478b7eb9e6e2d1dd0
 );
 
 comment on table orders is '订单表';
@@ -102,6 +107,8 @@ comment on column orders.purchase_time is '购买时间，默认当前时间';
 comment on column orders.total_price is '应付金额';
 
 comment on column orders.quantity is '购买数量';
+
+create EXTENSION if not exists btree_gist ;
 
 create index id_orders_store_product_id
     on orders using gist(user_id,product_id);
@@ -117,3 +124,7 @@ create table shopping_carts(
 
 
 
+<<<<<<< HEAD
+
+=======
+>>>>>>> 26f09b3292b545309631648478b7eb9e6e2d1dd0
