@@ -32,8 +32,8 @@
 					<el-input-number v-model="num" :min="1" :max="productInfo.stock" />
 				</div>
 				<div class="purchase">
-					<button @click="handlePurchase">立即购买</button>
-					<button @click="add2ShoppingCart">加入购物车</button>
+					<button :class="[productInfo.canbuy == '0'?'canot':'']" @click="handlePurchase">{{ productInfo.canbuy == '0'?'已下架':'立即购买' }}</button>
+					<button v-if="productInfo.canbuy == '1'" @click="add2ShoppingCart">加入购物车</button>
 				</div>
 			</div>
 		</main>
@@ -104,6 +104,9 @@ const activeName = ref('details')
 const num = ref(1)
 
 const handlePurchase = () => {
+	if (productInfo.value.canbuy == '0') {
+		return
+	}
 	purchaseListStore.add({
 		productId: productInfo.value.productId,
 		num: num.value,
@@ -321,5 +324,8 @@ const add2ShoppingCart = async () => {
 			}
 		}
 	}
+}
+.canot{
+	background-color: #ddd !important;
 }
 </style>
