@@ -53,6 +53,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useUserInfoStore } from '@/stores/userInfo.js'
 import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import message from '@/utils/message.js'
+import md5 from 'js-md5'
 import { login, register } from '@/api/user.js'
 const route = useRoute()
 const router = useRouter()
@@ -99,7 +100,7 @@ const loginOrRegister = async () => {
 		}
 		const request = {
 			userName: formData.value.userName,
-			password: formData.value.password
+			password: md5(formData.value.password)
 		}
 		const res = await login(request)
 		if (res) {

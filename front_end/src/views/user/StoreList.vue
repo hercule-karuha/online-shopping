@@ -42,7 +42,6 @@ onMounted(async () => {
         return
     }
     dataSource.value.list = [result.data]
-    console.log(dataSource)
 })
 </script>
 

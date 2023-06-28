@@ -96,7 +96,7 @@ onMounted(async () => {
     }
 })
 
-const submit = async () => {
+const submit = () => {
     formDataRef.value.validate(async (valid) => {
         if (valid) {
             // 获取区县码对应的区县名
@@ -120,10 +120,8 @@ const submit = async () => {
                     message.success('开店成功')
                     const updateUserInfo = await getUserInfo()
                     userInfoStore.userInfo = updateUserInfo.data
+                    router.replace('/store/detail/'+userInfoStore.userInfo.storeId)
                     
-                    router.push('/store/detail/'+res.data.storeId)
-                    
-                    // router.push('/store/detail/'+res.data.storeId)
                 }
             } else {
                 if (reqData.get('cover') == 'undefined') {

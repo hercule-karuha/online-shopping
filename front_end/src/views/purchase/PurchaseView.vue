@@ -4,8 +4,6 @@
         <div v-if="!purchaseSuccess" class="content">
             <div class="address">
                 <div class="label"><span>请选你的收货地址</span></div>
-                <!-- <el-cascader :options="options"
-                v-model="address"></el-cascader> -->
                 <el-radio-group v-model="selectedAddress" v-if="addressList.length>0">
                     <div v-for="(item, index) in addressList" :key="index" class="add-item">
                         <el-radio default :label="item" :model-value="item">{{ item.address + ' ' + item.phone }}</el-radio>

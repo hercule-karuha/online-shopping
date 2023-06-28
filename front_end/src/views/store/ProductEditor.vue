@@ -1,7 +1,7 @@
 <template>
     <main>
         <div class="content">
-            <div class="header">新品</div>
+            <div class="header">{{ editFlag.value?'修改商品':'新品' }}</div>
             <el-form :model="formData" ref="formDataRef" :rules="rules" class="form" label-position="top" status-icon>
                 <el-form-item label="请上传你的商品封面" prop="cover">
                     <CoverUpload @upload-image="uploadCover"

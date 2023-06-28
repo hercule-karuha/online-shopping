@@ -8,7 +8,7 @@
             </div>
         </header>
         <div class="content">
-            <DataList :data-source="dataSource" :flex="false" :loading="loading" :pageChange="pageChange">
+            <DataList :data-source="dataSource" :flex="false" :loading="loading" @changePage="changePage">
                 <template #default="{ data }">
                     <div class="order-item">
                         <div class="top">
@@ -40,9 +40,11 @@ import PurchaseListItem from '@/views/purchase/PurchaseListItem.vue'
 import message from '@/utils/message.js'
 import { getOrderList } from '@/api/user.js'
 import { parseAddressCodeArr } from '@/utils/tools.js'
+import { searchOrders } from '@/api/search.js'
 const keyword = ref('')
 const dataSource = ref({ list: [] })
 const loading = ref(false)
+const inSearch = ref(false)
 const parseOrderFormat = () => {
     dataSource.value.list.forEach((item) => {
         item.sendAddress = JSON.parse(item.sendAddress)
@@ -65,16 +67,56 @@ onMounted(async () => {
     parseOrderFormat()
 })
 
+
 const search = async () => {
-    if (keyword.value.trim() === '') {
-        message.warning('关键词不能为空')
+    if ( keyword.value.trim() === '') {
+        if (inSearch.value) {
+            inSearch.value = false
+            const res = await getOrderList({
+                pageSize: '8',
+                pageNo: '1',
+            })
+            if (!res) return
+            dataSource.value = res.data
+            parseOrderFormat()
+            return
+        }else{
+            message.warning('关键词不能为空')
+            return
+        }
+        
     }
+    inSearch.value = true
+    const res = await searchOrders({
+        keyword: keyword.value,
+        pageSize: '8',
+        pageNo: '1',
+    })
+    if (!res) return
+    dataSource.value = res.data
+    parseOrderFormat()
+    
+
 }
-const pageChange = async (pageNo) => {
+const changePage = async (pageNo) => {
+    console.log(pageNo)
+    if (inSearch.value) {
+        loading.value = true
+        const res = await searchOrders({
+            keyword: keyword.value,
+            pageSize: '8',
+            pageNo: pageNo,
+        })
+        loading.value = false
+        if (!res) return
+        dataSource.value = res.data
+        parseOrderFormat()
+        return
+    }
     loading.value = true
     const res = await getOrderList({
         pageSize: '8',
-        pageNo: pageNo,
+        pageNo: Number.parseInt(pageNo).toString(),
     })
     loading.value = false
     if (!res) return
