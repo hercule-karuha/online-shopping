@@ -191,6 +191,17 @@ pub async fn get_store_info(
         }
     };
 
+    match st_id {
+        0 => {
+            return Json(json!({
+                "code": 200,
+                "msg": "请求成功",
+                "data": null
+            }));
+        }
+        _ => {}
+    }
+
     let conn = &mut pool.get().unwrap();
 
     let store_res = stores
@@ -364,7 +375,8 @@ pub async fn get_sale_order(
     let usr_orders = match orders
         .select(OrderInfo::as_select())
         .offset((p_size * (p_no - 1)) as i64)
-        .limit(p_size.into()).order(order_id.desc())
+        .limit(p_size.into())
+        .order(order_id.desc())
         .filter(store_id.eq(st_id))
         .get_results(conn)
     {
