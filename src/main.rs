@@ -68,6 +68,7 @@ async fn main() {
         .route("/api/user/getDetailUserInfo", get(get_user_detail))
         .route("/api/product/getRecommend", post(get_recommend))
         .route("/api/product/deleteProduct", post(remove_product))
+        .route("/api/user/logout", post(logout))
         .with_state(pool)
         .layer(session_layer)
         .layer(DefaultBodyLimit::max(1024 * 1024 * 30));

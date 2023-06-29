@@ -54,3 +54,10 @@ export const getOrderList = (data) => {
         data
     })
 }
+
+export const logout = () => {
+    return request({
+        url: '/user/logout',
+        method: 'post'
+    })
+}
