@@ -21,7 +21,7 @@
                     <li><a @click="changeTab('/user/order')" 
                         :class="[route.name=='order'?'active_tab':'']">购买记录</a></li>
                     <!-- <li><a href="">买过的店</a></li> -->
-                    <li><a @click="changeTab('/user/stores')" 
+                    <li v-if="userInfoStore.userInfo.userId == '1'"><a @click="changeTab('/user/stores')" 
                         :class="[route.name=='stores'?'active_tab':'']">我的店铺</a></li>
                 </ul>
             </nav>
@@ -76,7 +76,6 @@ import { getDetailUserInfo, editUserInfo, getUserInfo } from '@/api/user'
 const { proxy } = getCurrentInstance()
 const options = regionData
 const userInfoStore = useUserInfoStore()
-console.log(userInfoStore.userinfo)
 const route = useRoute()
 const router = useRouter()
 const changeAvatar = ref(false)

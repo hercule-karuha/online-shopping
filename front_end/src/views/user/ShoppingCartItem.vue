@@ -1,30 +1,6 @@
 <template>
     <div class="content">
-        <!-- <div class="store">
-            <el-checkbox :label="'店铺: '+data.name" size="large" 
-            @change="changeSelectAll"
-            v-model="selected.store"></el-checkbox>
-        </div> -->
-        <!-- <div class="products">
-            <div
-            class="product-item" 
-            v-for="(item, index) in data.products" :key="item.productId">
-                <div class="left">
-                    <el-checkbox size="large"
-                    v-model="selected.products[index]"></el-checkbox>
-                    <div class="cover">
-                        <img :src="item.cover" alt="">
-                    </div>
-                    <div class="name">{{ item.name }}</div>
-                </div>
-                <div class="price">¥{{ item.price }}</div>
-                <el-input-number v-model="item.num"></el-input-number>
-                <div class="sum">¥{{ item.price*item.num }}</div>
-                <div class="operator">
-                    <span @click="delCart(item.id)">删除</span>
-                </div>
-            </div>
-        </div> -->
+
         <div class="content">
             <div class="product-item">
                 <div class="left">
