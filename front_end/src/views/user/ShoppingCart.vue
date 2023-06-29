@@ -31,7 +31,13 @@ import { ref, onMounted, watch } from 'vue'
 import { getShoppingCart } from '@/api/user'
 const router = useRouter()
 const purchaseListStore = usePurchaseListStore()
-const dataSource = ref({ list: [] })
+const dataSource = ref({
+    pageNo: 1,
+    pageSize: 1,
+    pageCount: 1,
+    total: 1,
+    list: []
+})
 const totalPrice = ref(0)
 const loading = ref(false)
 onMounted(async () => {

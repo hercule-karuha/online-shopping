@@ -31,7 +31,7 @@ const dataSource = ref({
     list: []
 })
 onMounted(async () => {
-    if (!userInfoStore.userInfo) {
+    if (!userInfoStore.userInfo.userId) {
         router.push('/account/login')
     }
     if (!userInfoStore.userInfo.storeId) {
