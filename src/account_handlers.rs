@@ -346,7 +346,9 @@ pub async fn edit_user(
         .execute(conn)
     {
         Ok(_) => {
-            session.insert("gender", new_sex).expect("cannot store value");
+            session
+                .insert("gender", new_sex)
+                .expect("cannot store value");
             return response::Json(json!({
                 "code": 200,
                 "msg": "修改成功",
@@ -605,5 +607,22 @@ pub async fn get_order_detail(
             "receiveAddress":u_order.user_address.clone().unwrap(),
             "time":u_order.purchase_time.unwrap().to_string(),
         }
+    }))
+}
+
+pub async fn logout(
+    mut session: WritableSession,
+) -> response::Json<Value> {
+    match session.get::<i32>("id") {
+        Some(id) => id,
+        None => {
+            return no_login_error();
+        }
+    };
+    session.remove("id");
+    response::Json(json!({
+        "code": 200,
+        "msg": "请求成功",
+        "data": null
     }))
 }
